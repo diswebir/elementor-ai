@@ -47,9 +47,12 @@ final class PlanService
         if ($model === '') {
             throw new RuntimeException('No provider model is configured.');
         }
+        $settings = $this->settings->all();
+        $maxTokens = min(1800, max(800, absint($settings['max_tokens'] ?? 1800)));
+        $timeout = min(120, max(60, absint($settings['request_timeout'] ?? 60)));
         $response = $this->ai->request(
-            $this->prompts->planMessages($request, $context['data']),
-            new AIRequestOptions($model, 0.2, 3000),
+            $this->prompts->planMessages($request, $this->context->planInput($context['data'])),
+            new AIRequestOptions($model, 0.2, $maxTokens, false, [], $timeout),
         );
         $plan = $this->validator->validate($this->decoder->decode($response->content));
         $planId = $this->plans->create($sessionId, $plan);

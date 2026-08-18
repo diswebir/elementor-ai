@@ -115,7 +115,7 @@ final class OpenAICompatibleProvider implements ProviderInterface
         }
 
         $response = wp_remote_post($endpoint, [
-            'timeout' => min(120, max(5, absint($this->config['request_timeout'] ?? 30))),
+            'timeout' => min(120, max(5, $options->timeout ?? absint($this->config['request_timeout'] ?? 30))),
             'redirection' => 0,
             'reject_unsafe_urls' => true,
             'headers' => $this->headers(),
@@ -123,7 +123,11 @@ final class OpenAICompatibleProvider implements ProviderInterface
         ]);
 
         if (is_wp_error($response)) {
-            throw new ProviderException('Provider request failed. Please retry later.', 'provider_network_error');
+            $code = (string) $response->get_error_code();
+            $message = $code === 'http_request_failed'
+                ? 'Provider request timed out or the connection was interrupted. Retry once or increase the provider timeout.'
+                : 'Provider request failed. Please retry later.';
+            throw new ProviderException($message, 'provider_network_error');
         }
         $code = wp_remote_retrieve_response_code($response);
         if ($code === 429) {

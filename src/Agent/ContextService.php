@@ -28,4 +28,12 @@ final class ContextService
 
         return ['data' => $data, 'hash' => hash('sha256', is_string($json) ? $json : '')];
     }
+
+    /** @param array<string, mixed> $context
+     *  @return array<string, mixed>
+     */
+    public function planInput(array $context): array
+    {
+        return $this->budget->forPlan($context);
+    }
 }

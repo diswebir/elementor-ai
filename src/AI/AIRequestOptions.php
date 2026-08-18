@@ -13,6 +13,7 @@ final readonly class AIRequestOptions
         public int $maxTokens = 3000,
         public bool $stream = false,
         public array $responseFormat = [],
+        public ?int $timeout = null,
     ) {
     }
 }

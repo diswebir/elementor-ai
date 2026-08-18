@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AI Elementor AG
  * Description: A secure, approval-driven AI agent for planning and building Elementor draft pages.
- * Version: 0.1.8
+ * Version: 0.1.9
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author: diswebir
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AIEA_VERSION', '0.1.8');
+define('AIEA_VERSION', '0.1.9');
 define('AIEA_FILE', __FILE__);
 define('AIEA_DIR', plugin_dir_path(__FILE__));
 define('AIEA_URL', plugin_dir_url(__FILE__));
