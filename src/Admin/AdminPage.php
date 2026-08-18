@@ -6,6 +6,7 @@ namespace AIEA\Admin;
 
 use AIEA\Core\CompatibilityGuard;
 use AIEA\AI\SecretManager;
+use AIEA\Support\Temperature;
 
 final class AdminPage
 {
@@ -113,7 +114,7 @@ final class AdminPage
             'provider_alias' => sanitize_text_field((string) ($input['provider_alias'] ?? $current['provider_alias'])),
             'base_url' => $baseUrl,
             'model' => sanitize_text_field((string) ($input['model'] ?? $current['model'])),
-            'temperature' => (string) min(2, max(0, (float) ($input['temperature'] ?? $current['temperature']))),
+            'temperature' => Temperature::normalize($input['temperature'] ?? $current['temperature'], (string) $current['temperature']),
             'max_tokens' => min(16000, max(256, absint($input['max_tokens'] ?? $current['max_tokens']))),
             'request_timeout' => min(120, max(5, absint($input['request_timeout'] ?? $current['request_timeout']))),
             'monthly_action_limit' => min(100000, max(1, absint($input['monthly_action_limit'] ?? $current['monthly_action_limit']))),
@@ -154,7 +155,7 @@ final class AdminPage
             return;
         }
 
-        echo '<input class="regular-text" type="' . esc_attr((string) $definition['type']) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) $value) . '" min="' . esc_attr((string) ($definition['min'] ?? '')) . '" max="' . esc_attr((string) ($definition['max'] ?? '')) . '">';
+        echo '<input class="regular-text" type="' . esc_attr((string) $definition['type']) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) $value) . '" min="' . esc_attr((string) ($definition['min'] ?? '')) . '" max="' . esc_attr((string) ($definition['max'] ?? '')) . '" step="' . esc_attr((string) ($definition['step'] ?? '1')) . '" inputmode="' . esc_attr((string) ($definition['inputmode'] ?? 'text')) . '">';
         if (!empty($definition['help'])) {
             echo '<p class="description">' . esc_html((string) $definition['help']) . '</p>';
         }
@@ -188,7 +189,7 @@ final class AdminPage
             'api_key' => ['label' => __('API key', 'ai-elementor-agent'), 'type' => 'password', 'help' => __('Leave blank to retain the existing key. It is encrypted before storage and never shown again.', 'ai-elementor-agent')],
             'base_url' => ['label' => __('Base URL', 'ai-elementor-agent'), 'type' => 'url', 'help' => __('HTTPS only. Private and loopback addresses are rejected by the request guard.', 'ai-elementor-agent')],
             'model' => ['label' => __('Default model', 'ai-elementor-agent'), 'type' => 'text', 'help' => __('The model must support structured output for Build mode.', 'ai-elementor-agent')],
-            'temperature' => ['label' => __('Temperature', 'ai-elementor-agent'), 'type' => 'number', 'min' => '0', 'max' => '2'],
+            'temperature' => ['label' => __('Temperature', 'ai-elementor-agent'), 'type' => 'number', 'min' => '0', 'max' => '2', 'step' => '0.01', 'inputmode' => 'decimal', 'help' => __('A value from 0 to 2; decimals such as 0.2 or 0.75 are supported.', 'ai-elementor-agent')],
             'max_tokens' => ['label' => __('Maximum tokens', 'ai-elementor-agent'), 'type' => 'number', 'min' => '256', 'max' => '16000'],
             'request_timeout' => ['label' => __('Request timeout', 'ai-elementor-agent'), 'type' => 'number', 'min' => '5', 'max' => '120'],
             'monthly_action_limit' => ['label' => __('Monthly action limit', 'ai-elementor-agent'), 'type' => 'number', 'min' => '1', 'max' => '100000'],
