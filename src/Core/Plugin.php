@@ -15,6 +15,7 @@ use AIEA\Agent\ContextBudget;
 use AIEA\Agent\ContextService;
 use AIEA\Agent\Redactor;
 use AIEA\Agent\ConversationService;
+use AIEA\Agent\PlanJsonDecoder;
 use AIEA\Agent\PlanSchemaValidator;
 use AIEA\Agent\PlanService;
 use AIEA\Agent\PromptBuilder;
@@ -198,6 +199,7 @@ final class Plugin
             ),
         );
         $this->container->singleton(PromptBuilder::class, static fn (): PromptBuilder => new PromptBuilder());
+        $this->container->singleton(PlanJsonDecoder::class, static fn (): PlanJsonDecoder => new PlanJsonDecoder());
         $this->container->singleton(
             PlanSchemaValidator::class,
             fn (): PlanSchemaValidator => new PlanSchemaValidator($this->container->get(CapabilityCatalog::class)),
@@ -223,6 +225,7 @@ final class Plugin
                 $this->container->get(JobRepository::class),
                 $this->container->get(DocumentRepository::class),
                 $this->container->get(PromptBuilder::class),
+                $this->container->get(PlanJsonDecoder::class),
                 $this->container->get(PlanSchemaValidator::class),
             ),
         );

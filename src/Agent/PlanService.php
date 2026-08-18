@@ -24,6 +24,7 @@ final class PlanService
         private readonly JobRepository $jobs,
         private readonly DocumentRepository $documents,
         private readonly PromptBuilder $prompts,
+        private readonly PlanJsonDecoder $decoder,
         private readonly PlanSchemaValidator $validator,
     ) {
     }
@@ -46,12 +47,11 @@ final class PlanService
         if ($model === '') {
             throw new RuntimeException('No provider model is configured.');
         }
-        $response = $this->ai->requestStructured(
+        $response = $this->ai->request(
             $this->prompts->planMessages($request, $context['data']),
-            new AIRequestOptions($model, 0.2, 3000, false, ['type' => 'json_object']),
+            new AIRequestOptions($model, 0.2, 3000),
         );
-        $decoded = json_decode($response->content, true);
-        $plan = $this->validator->validate($decoded);
+        $plan = $this->validator->validate($this->decoder->decode($response->content));
         $planId = $this->plans->create($sessionId, $plan);
         return ['id' => $planId, 'plan' => $plan, 'context_hash' => $contextHash];
     }

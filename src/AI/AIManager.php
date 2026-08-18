@@ -11,6 +11,12 @@ final class AIManager
     }
 
     /** @param list<AIMessage> $messages */
+    public function request(array $messages, AIRequestOptions $options): AIResponse
+    {
+        return $this->providers->current()->send($messages, $options);
+    }
+
+    /** @param list<AIMessage> $messages */
     public function requestStructured(array $messages, AIRequestOptions $options): AIResponse
     {
         $provider = $this->providers->current();
