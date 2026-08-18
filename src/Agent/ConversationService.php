@@ -6,6 +6,7 @@ namespace AIEA\Agent;
 
 use AIEA\AI\AIManager;
 use AIEA\AI\AIRequestOptions;
+use AIEA\Admin\Settings;
 use AIEA\Database\ConversationRepository;
 use RuntimeException;
 
@@ -13,6 +14,7 @@ final class ConversationService
 {
     public function __construct(
         private readonly AIManager $ai,
+        private readonly Settings $settings,
         private readonly ContextService $context,
         private readonly ConversationRepository $conversations,
         private readonly PromptBuilder $prompts,
@@ -29,9 +31,17 @@ final class ConversationService
         if (!hash_equals($context['hash'], $contextHash)) {
             throw new RuntimeException('Page context changed. Refresh context before asking.');
         }
+        $model = trim((string) $conversation['model_id']);
+        if ($model === '') {
+            $model = trim((string) ($this->settings->all()['model'] ?? ''));
+        }
+        if ($model === '') {
+            throw new RuntimeException('No provider model is configured. Save a model in the plugin settings first.');
+        }
+
         $response = $this->ai->requestStructured(
             $this->prompts->askMessages($request, $context['data']),
-            new AIRequestOptions((string) $conversation['model_id'], 0.3, 1200),
+            new AIRequestOptions($model, 0.3, 1200),
         );
         return $response->content;
     }

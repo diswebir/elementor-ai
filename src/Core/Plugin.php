@@ -206,6 +206,7 @@ final class Plugin
             ConversationService::class,
             fn (): ConversationService => new ConversationService(
                 $this->container->get(AIManager::class),
+                $this->container->get(Settings::class),
                 $this->container->get(ContextService::class),
                 $this->container->get(ConversationRepository::class),
                 $this->container->get(PromptBuilder::class),
@@ -242,6 +243,7 @@ final class Plugin
             SessionController::class,
             fn (): SessionController => new SessionController(
                 $this->container->get(ContextService::class),
+                $this->container->get(Settings::class),
                 $this->container->get(ConversationRepository::class),
                 $this->container->get(RestResponder::class),
             ),
