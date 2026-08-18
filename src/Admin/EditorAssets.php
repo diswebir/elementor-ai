@@ -45,7 +45,8 @@ final class EditorAssets
 
     public function renderEditorRoot(): void
     {
-        echo '<div id="aiea-editor-root" data-aiea-editor-root="1"></div>';
+        $config = wp_json_encode($this->editorConfig()) ?: '{}';
+        echo '<div id="aiea-editor-root" data-aiea-editor-root="1" data-aiea-editor-config="' . esc_attr($config) . '"></div>';
     }
 
     private function enqueue(string $handle, string $entry): void
@@ -72,17 +73,24 @@ final class EditorAssets
 
         wp_enqueue_script($handle, AIEA_URL . 'assets/build/' . ltrim((string) $manifestEntry['file'], '/'), [], AIEA_VERSION, true);
         if ($handle === self::EDITOR_HANDLE) {
-            $postId = isset($_GET['post']) ? absint($_GET['post']) : 0;
-            $settings = (new Settings())->all();
-            wp_add_inline_script($handle, 'window.AIEA_CONFIG = ' . wp_json_encode([
-                'restUrl' => esc_url_raw(rest_url('ai-elementor/v1/')),
-                'nonce' => wp_create_nonce('wp_rest'),
-                'postId' => $postId,
-                'canUse' => $postId > 0 && current_user_can(Capabilities::USE) && current_user_can('edit_post', $postId),
-                'canExecute' => $postId > 0 && current_user_can(Capabilities::EXECUTE) && current_user_can('edit_post', $postId) && get_post_status($postId) === 'draft',
-                'providerConfigured' => (new \AIEA\AI\SecretManager())->hasSecret(),
-                'defaultScope' => $settings['context_scope'] ?? 'current',
-            ]) . ';', 'before');
+            wp_add_inline_script($handle, 'window.AIEA_CONFIG = ' . wp_json_encode($this->editorConfig()) . ';', 'before');
         }
+    }
+
+    /** @return array{restUrl: string, nonce: string, postId: int, canUse: bool, canExecute: bool, providerConfigured: bool, defaultScope: string} */
+    private function editorConfig(): array
+    {
+        $postId = isset($_GET['post']) ? absint($_GET['post']) : 0;
+        $settings = (new Settings())->all();
+
+        return [
+            'restUrl' => esc_url_raw(rest_url('ai-elementor/v1/')),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'postId' => $postId,
+            'canUse' => $postId > 0 && current_user_can(Capabilities::USE) && current_user_can('edit_post', $postId),
+            'canExecute' => $postId > 0 && current_user_can(Capabilities::EXECUTE) && current_user_can('edit_post', $postId) && get_post_status($postId) === 'draft',
+            'providerConfigured' => (new \AIEA\AI\SecretManager())->hasSecret(),
+            'defaultScope' => $settings['context_scope'] ?? 'current',
+        ];
     }
 }

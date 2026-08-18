@@ -24,6 +24,17 @@ final class EditorIntegrationContractTest extends TestCase
         self::assertStringContainsString('<script type="module"', $assets);
     }
 
+    public function testEditorConfigurationHasADomFallbackAndBlocksEmptyNonceRequests(): void
+    {
+        $assets = (string) file_get_contents(dirname(__DIR__, 2) . '/src/Admin/EditorAssets.php');
+        $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/editor/main.tsx');
+
+        self::assertStringContainsString('data-aiea-editor-config=', $assets);
+        self::assertStringContainsString('dataset.aieaEditorConfig', $bundle);
+        self::assertStringContainsString('resolveEditorConfig()', $bundle);
+        self::assertStringContainsString('configurationMissing ? null : new AIEAApi(config)', $bundle);
+    }
+
     public function testEditorBundleHasAFallbackMountPoint(): void
     {
         $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/editor/main.tsx');

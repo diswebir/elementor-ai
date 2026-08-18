@@ -4,9 +4,26 @@ import { AIEAApi, ApiError, type JobStatus } from '../shared/api'
 import type { AIEAConfig, AgentMode, ExecutionMode, JobState, PlanAction, PlanView } from '../shared/types'
 import './editor.css'
 
-const configurationMissing = !window.AIEA_CONFIG
+const editorRoot = document.getElementById('aiea-editor-root')
+
+function resolveEditorConfig(): AIEAConfig | undefined {
+  if (window.AIEA_CONFIG) return window.AIEA_CONFIG
+  const serialized = editorRoot?.dataset.aieaEditorConfig
+  if (!serialized) return undefined
+  try {
+    const parsed = JSON.parse(serialized) as Partial<AIEAConfig>
+    const validScope = parsed.defaultScope === 'current' || parsed.defaultScope === 'site' || parsed.defaultScope === 'project'
+    if (typeof parsed.restUrl !== 'string' || typeof parsed.nonce !== 'string' || typeof parsed.postId !== 'number' || typeof parsed.canUse !== 'boolean' || typeof parsed.canExecute !== 'boolean' || typeof parsed.providerConfigured !== 'boolean' || !validScope) return undefined
+    return parsed as AIEAConfig
+  } catch {
+    return undefined
+  }
+}
+
+const resolvedConfig = resolveEditorConfig()
+const configurationMissing = !resolvedConfig
 const queryPostId = Number(new URL(window.location.href).searchParams.get('post') ?? '0')
-const config: AIEAConfig = window.AIEA_CONFIG ?? {
+const config: AIEAConfig = resolvedConfig ?? {
   restUrl: `${window.location.origin}/wp-json/ai-elementor/v1/`,
   nonce: '',
   postId: Number.isFinite(queryPostId) ? queryPostId : 0,
@@ -34,7 +51,7 @@ function App() {
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [lastSnapshot, setLastSnapshot] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const api = useMemo(() => config ? new AIEAApi(config) : null, [])
+  const api = useMemo(() => configurationMissing ? null : new AIEAApi(config), [])
 
   useEffect(() => {
     if (configurationMissing) {
@@ -53,7 +70,10 @@ function App() {
   }
 
   async function analyze(): Promise<void> {
-    if (!api) return
+    if (!api) {
+      setError('دادهٔ اولیه و nonce Editor در دسترس نیست. صفحه را Refresh کنید.')
+      return
+    }
     setBusy(true); setError(null); setState('analyzing')
     try {
       const context = await api.getContext(scope)
@@ -138,7 +158,7 @@ function App() {
       <header className="aiea-panel__header"><div><p className="aiea-eyebrow">ELEMENTOR AI AGENT</p><h2>عامل ساخت صفحه</h2></div><span className={`aiea-state aiea-state--${state}`} role="status">{stateLabels[state]}</span></header>
       <section className="aiea-context" aria-label="وضعیت محیط"><div><span>صفحه</span><strong>{config.postId ? `#${config.postId}` : 'نامشخص'}</strong></div><div><span>Provider</span><strong>{config.providerConfigured ? 'آماده' : 'نیازمند تنظیم'}</strong></div><div><span>Draft</span><strong>{config.canExecute ? 'قابل اجرا' : 'فقط خواندنی'}</strong></div></section>
       <div className="aiea-mode-tabs" role="tablist" aria-label="حالت عامل">{(['ask', 'plan', 'build'] as AgentMode[]).map((item) => <button key={item} role="tab" aria-selected={mode === item} className={mode === item ? 'is-active' : ''} onClick={() => setMode(item)}>{modeLabels[item]}</button>)}</div>
-      <form className="aiea-chat" onSubmit={submit}><label htmlFor="aiea-request">درخواست شما</label><textarea id="aiea-request" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="مثال: یک بخش معرفی راست‌چین با عنوان، توضیح و دکمه بساز." rows={5} disabled={busy} /><div className="aiea-chat__toolbar"><label>دامنهٔ داده<select value={scope} onChange={(event) => setScope(event.target.value as typeof scope)} disabled={busy}><option value="current">فقط صفحهٔ فعلی</option><option value="site">دادهٔ طراحی سایت</option><option value="project">دستورالعمل پروژه</option></select></label>{mode === 'build' && <label>اجرا<select value={executionMode} onChange={(event) => setExecutionMode(event.target.value as ExecutionMode)} disabled={busy}><option value="step">گام‌به‌گام</option><option value="auto">خودکار کنترل‌شده</option></select></label>}</div><div className="aiea-actions"><button type="button" className="aiea-button aiea-button--secondary" onClick={analyze} disabled={busy}>تحلیل محیط</button><button type="submit" className="aiea-button" disabled={busy || !config.canUse}>{busy ? 'در حال پردازش…' : mode === 'ask' ? 'ارسال پرسش' : 'ساخت Plan'}</button></div></form>
+      <form className="aiea-chat" onSubmit={submit}><label htmlFor="aiea-request">درخواست شما</label><textarea id="aiea-request" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="مثال: یک بخش معرفی راست‌چین با عنوان، توضیح و دکمه بساز." rows={5} disabled={busy} /><div className="aiea-chat__toolbar"><label>دامنهٔ داده<select value={scope} onChange={(event) => setScope(event.target.value as typeof scope)} disabled={busy}><option value="current">فقط صفحهٔ فعلی</option><option value="site">دادهٔ طراحی سایت</option><option value="project">دستورالعمل پروژه</option></select></label>{mode === 'build' && <label>اجرا<select value={executionMode} onChange={(event) => setExecutionMode(event.target.value as ExecutionMode)} disabled={busy}><option value="step">گام‌به‌گام</option><option value="auto">خودکار کنترل‌شده</option></select></label>}</div><div className="aiea-actions"><button type="button" className="aiea-button aiea-button--secondary" onClick={analyze} disabled={busy || configurationMissing}>تحلیل محیط</button><button type="submit" className="aiea-button" disabled={busy || !config.canUse}>{busy ? 'در حال پردازش…' : mode === 'ask' ? 'ارسال پرسش' : 'ساخت Plan'}</button></div></form>
       <section className="aiea-status-card" aria-live="polite"><strong>وضعیت</strong><p>{status}</p></section>
       {error && <section className="aiea-error" role="alert"><strong>نیاز به اقدام</strong><p>{error}</p></section>}
       {answer && <section className="aiea-status-card"><strong>پاسخ عامل</strong><p>{answer}</p></section>}
