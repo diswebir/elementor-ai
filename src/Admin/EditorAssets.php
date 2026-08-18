@@ -11,7 +11,21 @@ final class EditorAssets
 
     public function enqueueEditorAssets(): void
     {
+        add_filter('script_loader_tag', [$this, 'markEditorBundleAsModule'], 10, 3);
         $this->enqueue(self::EDITOR_HANDLE, 'editor');
+    }
+
+    public function markEditorBundleAsModule(string $tag, string $handle, string $src): string
+    {
+        if ($handle !== self::EDITOR_HANDLE) {
+            return $tag;
+        }
+
+        return sprintf(
+            '<script type="module" id="%1$s-js" src="%2$s"></script>',
+            esc_attr($handle),
+            esc_url($src),
+        );
     }
 
     public function enqueueAdminAssets(string $hook): void
@@ -51,7 +65,6 @@ final class EditorAssets
         }
 
         wp_enqueue_script($handle, AIEA_URL . 'assets/build/' . ltrim((string) $manifestEntry['file'], '/'), [], AIEA_VERSION, true);
-        wp_script_add_data($handle, 'type', 'module');
         if ($handle === self::EDITOR_HANDLE) {
             $postId = isset($_GET['post']) ? absint($_GET['post']) : 0;
             $settings = (new Settings())->all();

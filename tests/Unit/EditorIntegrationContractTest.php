@@ -16,6 +16,14 @@ final class EditorIntegrationContractTest extends TestCase
         self::assertStringContainsString("add_action('elementor/editor/after_enqueue_scripts'", $plugin);
     }
 
+    public function testEditorAssetsEmitTheViteBundleAsAnEsModule(): void
+    {
+        $assets = (string) file_get_contents(dirname(__DIR__, 2) . '/src/Admin/EditorAssets.php');
+
+        self::assertStringContainsString("add_filter('script_loader_tag'", $assets);
+        self::assertStringContainsString('<script type="module"', $assets);
+    }
+
     public function testEditorBundleHasAFallbackMountPoint(): void
     {
         $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/editor/main.tsx');
