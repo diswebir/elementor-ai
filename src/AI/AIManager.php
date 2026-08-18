@@ -25,4 +25,22 @@ final class AIManager
     {
         return $this->providers->current()->testConnection();
     }
+
+    public function sendTestMessage(string $message): AIResponse
+    {
+        $provider = $this->providers->current();
+        $models = $provider->models();
+        $model = $models[0]->id ?? '';
+        if ($model === '') {
+            throw new ProviderException('Provider model has not been configured.', 'missing_provider_model');
+        }
+
+        return $provider->send(
+            [
+                new AIMessage('system', 'You are a provider connectivity test. Answer the user message briefly and do not call tools.'),
+                new AIMessage('user', $message),
+            ],
+            new AIRequestOptions($model, 0.0, 256, false),
+        );
+    }
 }

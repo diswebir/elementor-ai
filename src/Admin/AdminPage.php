@@ -177,7 +177,7 @@ final class AdminPage
         settings_fields('aiea_settings_group');
         do_settings_sections(self::PAGE_SLUG);
         submit_button();
-        echo '</form></div>';
+        echo '</form><div id="aiea-admin-app" data-aiea-admin-app="1"></div></div>';
     }
 
     /** @return array<string, array<string, mixed>> */

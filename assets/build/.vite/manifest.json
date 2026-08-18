@@ -1,24 +1,27 @@
 {
-  "_client-BnU2CM3s.js": {
-    "file": "assets/client-BnU2CM3s.js",
+  "_client-DBoTRrZA.js": {
+    "file": "assets/client-DBoTRrZA.js",
     "name": "client"
   },
   "assets/src/admin/main.tsx": {
-    "file": "assets/admin-B3-iHczd.js",
+    "file": "assets/admin-Bo0gqqRJ.js",
     "name": "admin",
     "src": "assets/src/admin/main.tsx",
     "isEntry": true,
     "imports": [
-      "_client-BnU2CM3s.js"
+      "_client-DBoTRrZA.js"
+    ],
+    "css": [
+      "assets/admin-C5Gi5MG_.css"
     ]
   },
   "assets/src/editor/main.tsx": {
-    "file": "assets/editor-CurvWkKa.js",
+    "file": "assets/editor-BGDtHRvB.js",
     "name": "editor",
     "src": "assets/src/editor/main.tsx",
     "isEntry": true,
     "imports": [
-      "_client-BnU2CM3s.js"
+      "_client-DBoTRrZA.js"
     ],
     "css": [
       "assets/editor-CsOBNrRS.css"

@@ -81,6 +81,18 @@ final class Routes
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => [$this->providers, 'test'],
             'permission_callback' => [$this->permission, 'manage'],
+            'args' => [
+                'message' => [
+                    'required' => false,
+                    'validate_callback' => static fn (mixed $value): bool => is_string($value) && mb_strlen($value) <= 1000,
+                    'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+            ],
+        ]);
+        register_rest_route('ai-elementor/v1', '/providers/test/logs', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this->providers, 'logs'],
+            'permission_callback' => [$this->permission, 'manage'],
         ]);
     }
 

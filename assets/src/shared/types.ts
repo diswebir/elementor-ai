@@ -2,6 +2,12 @@ export type AgentMode = 'ask' | 'plan' | 'build'
 export type ExecutionMode = 'step' | 'auto'
 export type JobState = 'idle' | 'analyzing' | 'planning' | 'waiting_approval' | 'executing' | 'validating' | 'repairing' | 'completed' | 'failed' | 'cancelled' | 'needs_review'
 
+export interface AIEAAdminConfig {
+  restUrl: string
+  nonce: string
+  providerConfigured: boolean
+}
+
 export interface AIEAConfig {
   restUrl: string
   nonce: string
@@ -50,5 +56,6 @@ export interface PlanView {
 declare global {
   interface Window {
     AIEA_CONFIG?: AIEAConfig
+    AIEA_ADMIN_CONFIG?: AIEAAdminConfig
   }
 }

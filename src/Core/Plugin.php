@@ -23,6 +23,7 @@ use AIEA\Database\Installer;
 use AIEA\Database\PlanRepository;
 use AIEA\Database\TableNames;
 use AIEA\Audit\AuditLogger;
+use AIEA\Audit\AuditRepository;
 use AIEA\Audit\DiffService;
 use AIEA\Audit\SnapshotRepository;
 use AIEA\Elementor\CapabilityCatalog;
@@ -157,6 +158,7 @@ final class Plugin
             fn (): PlanRepository => new PlanRepository($this->container->get(TableNames::class)),
         );
         $this->container->singleton(AuditLogger::class, fn (): AuditLogger => new AuditLogger($this->container->get(TableNames::class)));
+        $this->container->singleton(AuditRepository::class, fn (): AuditRepository => new AuditRepository($this->container->get(TableNames::class)));
         $this->container->singleton(SnapshotRepository::class, fn (): SnapshotRepository => new SnapshotRepository($this->container->get(TableNames::class)));
         $this->container->singleton(DiffService::class, static fn (): DiffService => new DiffService());
         $this->container->singleton(
@@ -248,6 +250,8 @@ final class Plugin
             ProviderController::class,
             fn (): ProviderController => new ProviderController(
                 $this->container->get(AIManager::class),
+                $this->container->get(AuditLogger::class),
+                $this->container->get(AuditRepository::class),
                 $this->container->get(RestResponder::class),
             ),
         );

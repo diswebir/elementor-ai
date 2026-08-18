@@ -11,13 +11,13 @@ final class EditorAssets
 
     public function enqueueEditorAssets(): void
     {
-        add_filter('script_loader_tag', [$this, 'markEditorBundleAsModule'], 10, 3);
+        add_filter('script_loader_tag', [$this, 'markBundleAsModule'], 10, 3);
         $this->enqueue(self::EDITOR_HANDLE, 'editor');
     }
 
-    public function markEditorBundleAsModule(string $tag, string $handle, string $src): string
+    public function markBundleAsModule(string $tag, string $handle, string $src): string
     {
-        if ($handle !== self::EDITOR_HANDLE) {
+        if (!in_array($handle, [self::EDITOR_HANDLE, self::ADMIN_HANDLE], true)) {
             return $tag;
         }
 
@@ -34,7 +34,13 @@ final class EditorAssets
             return;
         }
 
+        add_filter('script_loader_tag', [$this, 'markBundleAsModule'], 10, 3);
         $this->enqueue(self::ADMIN_HANDLE, 'admin');
+        wp_add_inline_script(self::ADMIN_HANDLE, 'window.AIEA_ADMIN_CONFIG = ' . wp_json_encode([
+            'restUrl' => esc_url_raw(rest_url('ai-elementor/v1/')),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'providerConfigured' => (new \AIEA\AI\SecretManager())->hasSecret(),
+        ]) . ';', 'before');
     }
 
     public function renderEditorRoot(): void
