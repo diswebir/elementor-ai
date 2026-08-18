@@ -1,10 +1,20 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AIEAApi, ApiError, type JobStatus } from '../shared/api'
-import type { AgentMode, ExecutionMode, JobState, PlanAction, PlanView } from '../shared/types'
+import type { AIEAConfig, AgentMode, ExecutionMode, JobState, PlanAction, PlanView } from '../shared/types'
 import './editor.css'
 
-const config = window.AIEA_CONFIG
+const configurationMissing = !window.AIEA_CONFIG
+const queryPostId = Number(new URL(window.location.href).searchParams.get('post') ?? '0')
+const config: AIEAConfig = window.AIEA_CONFIG ?? {
+  restUrl: `${window.location.origin}/wp-json/ai-elementor/v1/`,
+  nonce: '',
+  postId: Number.isFinite(queryPostId) ? queryPostId : 0,
+  canUse: false,
+  canExecute: false,
+  providerConfigured: false,
+  defaultScope: 'current'
+}
 const modeLabels: Record<AgentMode, string> = { ask: 'پرسش', plan: 'برنامه‌ریزی', build: 'ساخت' }
 const stateLabels: Record<JobState, string> = { idle: 'آماده', analyzing: 'در حال تحلیل', planning: 'در حال برنامه‌ریزی', waiting_approval: 'منتظر تأیید', executing: 'در حال اجرا', validating: 'در حال اعتبارسنجی', repairing: 'در حال ترمیم', completed: 'کامل شد', failed: 'ناموفق', cancelled: 'لغو شد', needs_review: 'نیازمند بازبینی' }
 
@@ -26,8 +36,13 @@ function App() {
   const [busy, setBusy] = useState(false)
   const api = useMemo(() => config ? new AIEAApi(config) : null, [])
 
-  useEffect(() => { if (!config?.providerConfigured) setStatus('Provider پیکربندی نشده است؛ تحلیل context فعال است، اما پاسخ و Plan نیازمند تنظیم Provider هستند.') }, [])
-  if (!config) return null
+  useEffect(() => {
+    if (configurationMissing) {
+      setStatus('دادهٔ اولیهٔ افزونه در Editor بارگیری نشد. صفحه را یک‌بار Refresh کنید؛ اگر ادامه داشت، افزونه را دوباره نصب یا assetهای build را بررسی کنید.')
+      return
+    }
+    if (!config.providerConfigured) setStatus('Provider پیکربندی نشده است؛ تحلیل context فعال است، اما پاسخ و Plan نیازمند تنظیم Provider هستند.')
+  }, [])
 
   const actions = plan?.actions ?? []
   const updateTasks = async (jobId: string): Promise<JobStatus> => {
@@ -130,5 +145,19 @@ function App() {
   </aside>
 }
 
-const rootNode = document.getElementById('aiea-editor-root')
-if (rootNode) createRoot(rootNode).render(<App />)
+function mountPanel(): void {
+  let rootNode = document.getElementById('aiea-editor-root')
+  if (!rootNode) {
+    rootNode = document.createElement('div')
+    rootNode.id = 'aiea-editor-root'
+    rootNode.dataset.aieaEditorRoot = 'fallback'
+    document.body.append(rootNode)
+  }
+  createRoot(rootNode).render(<App />)
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mountPanel, { once: true })
+} else {
+  mountPanel()
+}

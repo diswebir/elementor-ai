@@ -78,6 +78,7 @@ final class Plugin
         add_action('init', [$this->container->get(AdminPage::class), 'registerCapabilities']);
         add_action('admin_menu', [$this->container->get(AdminPage::class), 'registerPage']);
         add_action('admin_init', [$this->container->get(AdminPage::class), 'registerSettings']);
+        add_action('elementor/editor/footer', [$this->container->get(EditorAssets::class), 'renderEditorRoot'], 5);
         add_action('elementor/editor/after_enqueue_scripts', [$this->container->get(EditorAssets::class), 'enqueueEditorAssets']);
         add_action('admin_enqueue_scripts', [$this->container->get(EditorAssets::class), 'enqueueAdminAssets']);
 

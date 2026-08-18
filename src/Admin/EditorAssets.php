@@ -12,7 +12,6 @@ final class EditorAssets
     public function enqueueEditorAssets(): void
     {
         $this->enqueue(self::EDITOR_HANDLE, 'editor');
-        add_action('elementor/editor/footer', [$this, 'renderEditorRoot']);
     }
 
     public function enqueueAdminAssets(string $hook): void
@@ -61,7 +60,7 @@ final class EditorAssets
                 'nonce' => wp_create_nonce('wp_rest'),
                 'postId' => $postId,
                 'canUse' => $postId > 0 && current_user_can(Capabilities::USE) && current_user_can('edit_post', $postId),
-                'canExecute' => $postId > 0 && current_user_can(Capabilities::EXECUTE) && current_user_can('edit_post', $postId) && !current_user_can('publish_post', $postId),
+                'canExecute' => $postId > 0 && current_user_can(Capabilities::EXECUTE) && current_user_can('edit_post', $postId) && get_post_status($postId) === 'draft',
                 'providerConfigured' => (new \AIEA\AI\SecretManager())->hasSecret(),
                 'defaultScope' => $settings['context_scope'] ?? 'current',
             ]) . ';', 'before');
