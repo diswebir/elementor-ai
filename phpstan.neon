@@ -1,0 +1,16 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    paths:
+        - src
+    level: 6
+    bootstrapFiles:
+        - tests/bootstrap.php
+    stubFiles:
+        - tests/stubs/elementor.php
+    scanFiles:
+        - tests/stubs/elementor.php
+    treatPhpDocTypesAsCertain: false
+    excludes_analyse:
+        - vendor

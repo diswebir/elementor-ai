@@ -1,0 +1,27 @@
+{
+  "_client-BnU2CM3s.js": {
+    "file": "assets/client-BnU2CM3s.js",
+    "name": "client"
+  },
+  "assets/src/admin/main.tsx": {
+    "file": "assets/admin-B3-iHczd.js",
+    "name": "admin",
+    "src": "assets/src/admin/main.tsx",
+    "isEntry": true,
+    "imports": [
+      "_client-BnU2CM3s.js"
+    ]
+  },
+  "assets/src/editor/main.tsx": {
+    "file": "assets/editor-Ci5QOuRR.js",
+    "name": "editor",
+    "src": "assets/src/editor/main.tsx",
+    "isEntry": true,
+    "imports": [
+      "_client-BnU2CM3s.js"
+    ],
+    "css": [
+      "assets/editor-CDqUW7j7.css"
+    ]
+  }
+}

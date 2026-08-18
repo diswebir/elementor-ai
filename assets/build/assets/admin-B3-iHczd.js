@@ -1,0 +1,1 @@
+import{c as r,j as t}from"./client-BnU2CM3s.js";const e=document.getElementById("aiea-admin-app");e&&r.createRoot(e).render(t.jsx("p",{dir:"rtl",children:"تنظیمات پیشرفته از طریق فرم امن WordPress بارگذاری می‌شود."}));
