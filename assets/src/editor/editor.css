@@ -26,6 +26,10 @@
 .aiea-state--planning, .aiea-state--analyzing, .aiea-state--executing, .aiea-state--validating, .aiea-state--repairing { background: #fef3c7; color: #92400e; }
 .aiea-state--waiting_approval, .aiea-state--needs_review { background: #dbeafe; color: #1d4ed8; }
 .aiea-context { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-block: 14px; }
+.aiea-simple-intro { border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff; color: #1e3a8a; margin-block: 12px; padding: 10px; }
+.aiea-simple-intro strong { display: block; margin-block-end: 3px; }
+.aiea-simple-intro p { color: #334155; font-size: 12px; }
+.aiea-drop-ghost { position: fixed; z-index: 1000001; box-sizing: border-box; max-width: 144px; overflow: hidden; border: 1px solid #0d9488; border-radius: 8px; background: #fff; box-shadow: 0 10px 24px rgba(15, 118, 110, .28); color: #0f172a; font-family: Inter, Vazirmatn, Tahoma, sans-serif; font-size: 12px; font-weight: 700; line-height: 1.35; padding: 9px 11px; pointer-events: none; text-overflow: ellipsis; transition: transform .36s cubic-bezier(.2, .8, .2, 1), opacity .36s ease; white-space: nowrap; }
 .aiea-context > div, .aiea-status-card, .aiea-plan, .aiea-error { border: 1px solid var(--aiea-border); background: var(--aiea-card); border-radius: 8px; padding: 9px; }
 .aiea-context span { display: block; color: var(--aiea-muted); font-size: 11px; }
 .aiea-context strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #0f172a; font-size: 12px; }
@@ -62,4 +66,4 @@
 .aiea-session { color: var(--aiea-muted); font-size: 10px; overflow-wrap: anywhere; }
 .aiea-ltr { direction: ltr; unicode-bidi: isolate; text-align: left; }
 @media (max-width: 600px) { .aiea-panel { inset-inline: 8px; width: auto; inset-block-end: 8px; } .aiea-panel__content { max-height: 70vh; } .aiea-panel__launcher { inset-inline-end: 12px; inset-block-end: 12px; } }
-@media (prefers-reduced-motion: reduce) { .aiea-button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .aiea-button, .aiea-drop-ghost { transition: none; } }

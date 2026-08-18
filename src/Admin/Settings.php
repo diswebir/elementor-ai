@@ -32,6 +32,7 @@ final class Settings
             'retention_days' => 30,
             'development_mode' => false,
             'allow_auto_mode' => false,
+            'simple_editor_mode' => true,
         ];
     }
 }

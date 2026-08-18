@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace AIEA\Rest;
 
+use AIEA\Admin\Settings;
 use AIEA\Support\PluginPermissions;
 use WP_Error;
 use WP_REST_Request;
 
 final class Permission
 {
-    public function __construct(private readonly PluginPermissions $permissions)
-    {
+    public function __construct(
+        private readonly PluginPermissions $permissions,
+        private readonly Settings $settings,
+    ) {
     }
 
     public function usePage(WP_REST_Request $request): bool|WP_Error
@@ -19,6 +22,9 @@ final class Permission
         $nonce = $this->verifyNonce($request);
         if ($nonce instanceof WP_Error) {
             return $nonce;
+        }
+        if ($this->isSimpleEditorMode()) {
+            return $this->simpleModeError();
         }
         $postId = absint($request->get_param('post_id'));
         if ($postId === 0 || !$this->permissions->canUseForPost($postId)) {
@@ -32,6 +38,9 @@ final class Permission
         $nonce = $this->verifyNonce($request);
         if ($nonce instanceof WP_Error) {
             return $nonce;
+        }
+        if ($this->isSimpleEditorMode()) {
+            return $this->simpleModeError();
         }
         $postId = absint($request->get_param('post_id'));
         $post = $postId > 0 ? get_post($postId) : null;
@@ -51,6 +60,20 @@ final class Permission
             return new WP_Error('aiea_forbidden', __('You cannot manage AI provider settings.', 'ai-elementor-ag'), ['status' => 403]);
         }
         return true;
+    }
+
+    private function isSimpleEditorMode(): bool
+    {
+        return !empty($this->settings->all()['simple_editor_mode']);
+    }
+
+    private function simpleModeError(): WP_Error
+    {
+        return new WP_Error(
+            'aiea_simple_editor_mode',
+            __('AI chat, planning, and job execution are temporarily disabled while simplified editor mode is active.', 'ai-elementor-ag'),
+            ['status' => 403],
+        );
     }
 
     private function verifyNonce(WP_REST_Request $request): true|WP_Error

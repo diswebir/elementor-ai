@@ -178,6 +178,9 @@ final class AdminPage
             echo '<div class="notice notice-warning inline"><p>' . esc_html(implode(' ', $issues)) . '</p></div>';
         }
         echo '<p>' . esc_html__('تنظیمات اتصال و سیاست‌های عامل در این صفحه مدیریت می‌شود. کلید API در هیچ پاسخ یا گزارش مرورگر نمایش داده نمی‌شود.', 'ai-elementor-ag') . '</p>';
+        if (!empty($this->settings->all()['simple_editor_mode'])) {
+            echo '<div class="notice notice-info inline"><p>' . esc_html__('حالت سادهٔ Editor فعال است: گفت‌وگو، تحلیل، Plan، Job و اجرای خودکار موقتاً غیرفعال‌اند. پنل Elementor فقط افزودن یک عنوان را انجام می‌دهد.', 'ai-elementor-ag') . '</p></div>';
+        }
         echo '<form action="options.php" method="post">';
         settings_fields('aiea_settings_group');
         do_settings_sections(self::PAGE_SLUG);

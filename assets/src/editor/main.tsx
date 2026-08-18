@@ -1,15 +1,30 @@
-import React, { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { createRoot } from 'react-dom/client'
-import { AIEAApi, ApiError, type JobStatus } from '../shared/api'
-import type { AIEAConfig, AgentMode, ExecutionMode, JobState, PlanAction, PlanView } from '../shared/types'
+import type { AIEAConfig } from '../shared/types'
 import './editor.css'
 
 const editorRoot = document.getElementById('aiea-editor-root')
+
+type ElementorCommandApi = {
+  run: (command: string, args?: Record<string, unknown>) => unknown
+}
+
+type ElementorEditorApi = {
+  getPreviewContainer?: () => unknown
+}
+
+declare global {
+  interface Window {
+    $e?: ElementorCommandApi
+    elementor?: ElementorEditorApi
+  }
+}
 
 function resolveEditorConfig(): AIEAConfig | undefined {
   if (window.AIEA_CONFIG) return window.AIEA_CONFIG
   const serialized = editorRoot?.dataset.aieaEditorConfig
   if (!serialized) return undefined
+
   try {
     const parsed = JSON.parse(serialized) as Partial<AIEAConfig>
     const validScope = parsed.defaultScope === 'current' || parsed.defaultScope === 'site' || parsed.defaultScope === 'project'
@@ -32,176 +47,133 @@ const config: AIEAConfig = resolvedConfig ?? {
   pageStatus: '',
   allowAutoMode: false,
   providerConfigured: false,
-  defaultScope: 'current'
+  defaultScope: 'current',
 }
-const modeLabels: Record<AgentMode, string> = { ask: 'پرسش', plan: 'برنامه‌ریزی', build: 'ساخت' }
-const stateLabels: Record<JobState, string> = { idle: 'آماده', analyzing: 'در حال تحلیل', planning: 'در حال برنامه‌ریزی', waiting_approval: 'منتظر تأیید', executing: 'در حال اجرا', validating: 'در حال اعتبارسنجی', repairing: 'در حال ترمیم', completed: 'کامل شد', failed: 'ناموفق', cancelled: 'لغو شد', needs_review: 'نیازمند بازبینی' }
 
-function isAutoEligible(actions: PlanAction[]): boolean {
-  return actions.length > 0 && actions.every((action) => action.risk_level === 'low' && !action.requires_approval)
+function normalizeTitle(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().slice(0, 180)
+}
+
+function animateDrop(title: string): Promise<void> {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve()
+
+  const iframe = document.querySelector<HTMLElement>('#elementor-preview-iframe')
+  const target = iframe?.getBoundingClientRect()
+  const startX = Math.max(16, window.innerWidth - 238)
+  const startY = Math.max(92, window.innerHeight - 124)
+  const endX = target ? target.left + (target.width / 2) - 72 : window.innerWidth / 2 - 72
+  const endY = target ? target.top + Math.min(128, target.height / 3) : window.innerHeight / 3
+  const ghost = document.createElement('div')
+
+  ghost.className = 'aiea-drop-ghost'
+  ghost.setAttribute('aria-hidden', 'true')
+  ghost.textContent = title
+  ghost.style.left = `${startX}px`
+  ghost.style.top = `${startY}px`
+  document.body.append(ghost)
+
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      ghost.style.transform = `translate(${endX - startX}px, ${endY - startY}px) scale(.96)`
+      ghost.style.opacity = '0'
+    })
+    window.setTimeout(() => {
+      ghost.remove()
+      resolve()
+    }, 420)
+  })
+}
+
+async function createHeadingInEditor(title: string): Promise<void> {
+  const commandApi = window.$e
+  const previewContainer = window.elementor?.getPreviewContainer?.()
+  if (!commandApi?.run || !previewContainer) {
+    throw new Error('رابط داخلی Elementor آماده نیست. Editor را یک‌بار Refresh کنید و دوباره تلاش کنید.')
+  }
+
+  const headingBlock = {
+    elType: 'container',
+    isInner: false,
+    settings: {},
+    elements: [{
+      elType: 'widget',
+      widgetType: 'heading',
+      settings: {
+        title,
+        header_size: 'h2',
+      },
+      elements: [],
+    }],
+  }
+
+  const dropAnimation = animateDrop(title)
+  await Promise.resolve(commandApi.run('document/elements/create', {
+    container: previewContainer,
+    model: headingBlock,
+  }))
+  await dropAnimation
 }
 
 function App() {
   const [isOpen, setIsOpen] = useState(false)
-  const [mode, setMode] = useState<AgentMode>('plan')
-  const [executionMode, setExecutionMode] = useState<ExecutionMode>('step')
-  const [scope, setScope] = useState(config?.defaultScope ?? 'current')
-  const [state, setState] = useState<JobState>('idle')
-  const [message, setMessage] = useState('')
-  const [answer, setAnswer] = useState<string | null>(null)
-  const [status, setStatus] = useState('برای شروع، هدف صفحه را بنویسید.')
-  const [error, setError] = useState<string | null>(null)
-  const [session, setSession] = useState<{ id: string; contextHash: string } | null>(null)
-  const [plan, setPlan] = useState<PlanView | null>(null)
-  const [planId, setPlanId] = useState<string | null>(null)
-  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [lastSnapshot, setLastSnapshot] = useState<string | null>(null)
+  const [title, setTitle] = useState('عنوان جدید')
   const [busy, setBusy] = useState(false)
-  const api = useMemo(() => configurationMissing ? null : new AIEAApi(config), [])
+  const [status, setStatus] = useState('فقط یک عملیات فعال است: افزودن یک عنوان به برگه.')
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (configurationMissing) {
-      setStatus('دادهٔ اولیهٔ افزونه در Editor بارگیری نشد. صفحه را یک‌بار Refresh کنید؛ اگر ادامه داشت، افزونه را دوباره نصب یا assetهای build را بررسی کنید.')
-      return
-    }
-    if (!config.providerConfigured) setStatus('Provider پیکربندی نشده است؛ تحلیل context فعال است، اما پاسخ و Plan نیازمند تنظیم Provider هستند.')
-  }, [])
+  const canInsert = !configurationMissing && config.canExecute && config.pageStatus === 'draft'
 
-  const actions = plan?.actions ?? []
-  const updateTasks = async (jobId: string): Promise<JobStatus> => {
-    if (!api) throw new Error('API unavailable')
-    const current = await api.jobStatus(jobId)
-    setJobStatus(current)
-    return current
-  }
-
-  async function analyze(): Promise<void> {
-    if (!api) {
-      setError('دادهٔ اولیه و nonce Editor در دسترس نیست. صفحه را Refresh کنید.')
-      return
-    }
-    setBusy(true); setError(null); setState('analyzing')
-    try {
-      const context = await api.getContext(scope)
-      setStatus(`Context ایمن آماده شد: ${context.hash.slice(0, 10)}. داده‌های حساس redacted شده‌اند.`)
-      setState('idle')
-    } catch (err) { setState('failed'); setError(err instanceof ApiError ? err.message : 'خواندن context ناموفق بود.') } finally { setBusy(false) }
-  }
-
-  async function submit(event: FormEvent): Promise<void> {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
-    if (!message.trim()) { setError('هدف یا درخواست خود را وارد کنید.'); return }
-    if (!api || config?.canUse !== true) { setError('مجوز خواندن context این صفحه را ندارید.'); return }
-    if ((mode === 'plan' || mode === 'build') && !config.providerConfigured) { setError('ابتدا Provider و کلید API را از تنظیمات افزونه پیکربندی کنید.'); return }
-    setBusy(true); setError(null); setAnswer(null); setPlan(null); setPlanId(null); setJobStatus(null); setState(mode === 'ask' ? 'analyzing' : 'planning')
-    try {
-      const created = await api.createSession(scope)
-      const active = { id: created.session.id, contextHash: created.session.context_hash }
-      setSession(active)
-      if (mode === 'ask') {
-        setAnswer(await api.ask(active.id, active.contextHash, message.trim()))
-        setStatus('پاسخ دریافت شد؛ هیچ تغییری در صفحه اعمال نشده است.')
-        setState('idle')
-        return
-      }
-      const generated = await api.createPlan(active.id, active.contextHash, message.trim())
-      const generatedActions = generated.plan.actions
-      setPlanId(generated.id)
-      setPlan({ goal: generated.plan.goal, assumptions: generated.plan.assumptions, acceptanceCriteria: generated.plan.acceptance_criteria, actions: generatedActions })
-      setState('waiting_approval')
-
-      if (executionMode === 'auto') {
-        if (!config.allowAutoMode) {
-          setStatus('Plan معتبر دریافت شد. برای استفاده از اجرای خودکار، ابتدا گزینهٔ «Allow Auto mode» را از تنظیمات افزونه فعال کنید.')
-          return
-        }
-        if (config.pageStatus !== 'draft') {
-          setStatus('Plan معتبر دریافت شد. اجرای خودکار فقط برای برگهٔ Draft مجاز است؛ برگه را Draft کنید یا حالت گام‌به‌گام را انتخاب کنید.')
-          return
-        }
-        if (!isAutoEligible(generatedActions)) {
-          setStatus('Plan معتبر دریافت شد، اما اجرای خودکار فقط Planهای کم‌ریسک و بدون نیاز به تأیید گام‌ها را اجرا می‌کند. حالت گام‌به‌گام را انتخاب کنید.')
-          return
-        }
-        await approve(generated.id, active, generatedActions, true)
-        return
-      }
-
-      setStatus('Plan معتبر دریافت شد. Plan را بررسی کنید و سپس Job را بسازید.')
-    } catch (err) { setState('failed'); setError(err instanceof ApiError ? err.message : 'درخواست عامل متوقف شد.') } finally { setBusy(false) }
-  }
-
-  async function approve(approvedPlanId = planId, activeSession = session, approvedActions = actions, autoApproved = false): Promise<void> {
-    if (!api || !approvedPlanId || !activeSession) return
-    if (config.pageStatus !== 'draft') {
-      setError('اجرای تغییرات فقط روی برگهٔ Draft مجاز است. پیش از ساخت Job، وضعیت برگه را به Draft تغییر دهید.')
+    const normalizedTitle = normalizeTitle(title)
+    if (!normalizedTitle) {
+      setError('متن عنوان را وارد کنید.')
       return
     }
-    setBusy(true); setError(null)
-    try {
-      const result = await api.approvePlan(approvedPlanId, activeSession.contextHash, approvedActions.map((action) => action.id))
-      const next = await updateTasks(result.job.id)
-      setStatus(autoApproved ? 'Plan کم‌ریسک تأیید و اجرای خودکار آن آغاز شد.' : 'Plan تأیید شد. Job ایجاد شده و آمادهٔ اجرای اولین گام است.')
-      setState('waiting_approval')
-      if (autoApproved) await runRemaining(next.job.id)
-    } catch (err) { setState('needs_review'); setError(err instanceof ApiError ? err.message : 'تأیید Plan ممکن نشد.') } finally { setBusy(false) }
-  }
+    if (!canInsert) {
+      setError('افزودن محتوا فقط برای برگهٔ Draft و کاربر دارای مجوز اجرا فعال است.')
+      return
+    }
 
-  async function runNext(jobId?: string): Promise<boolean> {
-    if (!api || config.canExecute !== true) { setError('برای اجرای تغییرات به capability اجرای افزونه نیاز دارید.'); return false }
-    if (config.pageStatus !== 'draft') { setError('اجرای تغییرات فقط روی برگهٔ Draft مجاز است.'); return false }
-    const activeJob = jobId ?? jobStatus?.job.id
-    if (!activeJob) return false
-    setBusy(true); setError(null); setState('executing')
+    setBusy(true)
+    setError(null)
+    setStatus('در حال افزودن عنوان به بوم Elementor…')
     try {
-      const result = await api.runNext(activeJob)
-      if (result.receipt?.snapshot_id) setLastSnapshot(result.receipt.snapshot_id)
-      await updateTasks(activeJob)
-      setStatus(result.receipt?.summary ?? (result.completed ? 'همهٔ گام‌ها اجرا و برای اعتبارسنجی آماده‌اند.' : 'یک گام با receipt ثبت‌شده اجرا شد.'))
-      setState(result.completed ? 'completed' : 'waiting_approval')
-      return true
-    } catch (err) {
-      setState('needs_review')
-      setError(err instanceof ApiError ? err.message : 'اجرای گام با توقف ایمن روبه‌رو شد.')
-      return false
-    } finally { setBusy(false) }
-  }
-
-  async function runRemaining(jobId: string): Promise<void> {
-    while (true) {
-      const didRun = await runNext(jobId)
-      if (!didRun) return
-      const current = await updateTasks(jobId)
-      if (!current.tasks.some((task) => task.state === 'pending')) {
-        setState('completed')
-        return
-      }
+      await createHeadingInEditor(normalizedTitle)
+      setStatus('عنوان به بوم Elementor اضافه شد. برای ثبت دائمی تغییر، دکمهٔ «به‌روزرسانی» Elementor را بزنید.')
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'افزودن عنوان متوقف شد. Editor را Refresh کنید و دوباره تلاش کنید.')
+      setStatus('تغییری ثبت نشد.')
+    } finally {
+      setBusy(false)
     }
   }
 
-  async function rollback(): Promise<void> {
-    if (!api || !jobStatus || !lastSnapshot) return
-    setBusy(true); setError(null)
-    try { await api.rollback(jobStatus.job.id, lastSnapshot); await updateTasks(jobStatus.job.id); setStatus('Snapshot با موفقیت بازیابی شد.'); setState('needs_review') } catch (err) { setError(err instanceof ApiError ? err.message : 'Rollback ناموفق بود.') } finally { setBusy(false) }
-  }
-
-  const taskState = (action: PlanAction): string => jobStatus?.tasks.find((task) => task.action_id === action.id)?.state ?? action.state ?? 'pending'
-  return <aside className={`aiea-panel ${isOpen ? 'aiea-panel--open' : 'aiea-panel--closed'}`} dir="rtl" aria-label="عامل هوش مصنوعی المنتور">
-    <button className="aiea-panel__launcher" onClick={() => setIsOpen((value) => !value)} aria-expanded={isOpen} aria-controls="aiea-panel-content">
+  return <aside className={`aiea-panel ${isOpen ? 'aiea-panel--open' : 'aiea-panel--closed'}`} dir="rtl" aria-label="افزودن سریع Elementor">
+    <button className="aiea-panel__launcher" onClick={() => setIsOpen((value) => !value)} aria-expanded={isOpen} aria-controls="aiea-editor-panel-content">
       <span className="aiea-panel__launcher-badge" aria-hidden="true">AI</span>
-      <span>{isOpen ? 'بستن پنل هوش مصنوعی' : 'ویرایش با هوش مصنوعی'}</span>
+      <span>{isOpen ? 'بستن پنل' : 'افزودن با هوش مصنوعی'}</span>
     </button>
-    {isOpen && <div id="aiea-panel-content" className="aiea-panel__content">
-      <header className="aiea-panel__header"><div><p className="aiea-eyebrow">ELEMENTOR AI AGENT</p><h2>عامل ساخت صفحه</h2></div><span className={`aiea-state aiea-state--${state}`} role="status">{stateLabels[state]}</span></header>
-      <section className="aiea-context" aria-label="وضعیت محیط"><div><span>صفحه</span><strong>{config.postId ? `#${config.postId}` : 'نامشخص'}</strong></div><div><span>Provider</span><strong>{config.providerConfigured ? 'آماده' : 'نیازمند تنظیم'}</strong></div><div><span>وضعیت برگه</span><strong><bdi dir="ltr">{config.pageStatus || 'unknown'}</bdi></strong></div><div><span>مجوز اجرا</span><strong>{config.canExecute ? 'دارد' : 'ندارد'}</strong></div></section>
-      {config.pageStatus !== 'draft' && <section className="aiea-error" role="status"><strong>اجرای محافظت‌شده</strong><p>Plan را می‌توانید بسازید و بررسی کنید، اما اعمال تغییرات فقط روی برگهٔ Draft انجام می‌شود. وضعیت این برگه را به Draft تغییر دهید و سپس Editor را Refresh کنید.</p></section>}
-      <div className="aiea-mode-tabs" role="tablist" aria-label="حالت عامل">{(['ask', 'plan', 'build'] as AgentMode[]).map((item) => <button key={item} role="tab" aria-selected={mode === item} className={mode === item ? 'is-active' : ''} onClick={() => setMode(item)}>{modeLabels[item]}</button>)}</div>
-      <form className="aiea-chat" onSubmit={submit}><label htmlFor="aiea-request">درخواست شما</label><textarea id="aiea-request" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="مثال: یک بخش معرفی راست‌چین با عنوان، توضیح و دکمه بساز." rows={5} disabled={busy} /><div className="aiea-chat__toolbar"><label>دامنهٔ داده<select value={scope} onChange={(event) => setScope(event.target.value as typeof scope)} disabled={busy}><option value="current">فقط صفحهٔ فعلی</option><option value="site">دادهٔ طراحی سایت</option><option value="project">دستورالعمل پروژه</option></select></label>{mode !== 'ask' && <label>اجرا<select value={executionMode} onChange={(event) => setExecutionMode(event.target.value as ExecutionMode)} disabled={busy}><option value="step">گام‌به‌گام</option><option value="auto" disabled={!config.allowAutoMode}>خودکار کنترل‌شده</option></select></label>}</div><div className="aiea-actions"><button type="button" className="aiea-button aiea-button--secondary" onClick={analyze} disabled={busy || configurationMissing}>تحلیل محیط</button><button type="submit" className="aiea-button" disabled={busy || !config.canUse}>{busy ? 'در حال پردازش…' : mode === 'ask' ? 'ارسال پرسش' : 'ساخت Plan'}</button></div></form>
+    {isOpen && <div id="aiea-editor-panel-content" className="aiea-panel__content">
+      <header className="aiea-panel__header">
+        <div><p className="aiea-eyebrow">SIMPLIFIED EDITOR MODE</p><h2>افزودن عنوان</h2></div>
+        <span className={`aiea-state aiea-state--${busy ? 'executing' : 'idle'}`} role="status">{busy ? 'در حال افزودن' : 'آماده'}</span>
+      </header>
+      <section className="aiea-context" aria-label="وضعیت عملیات">
+        <div><span>برگه</span><strong>{config.postId ? `#${config.postId}` : 'نامشخص'}</strong></div>
+        <div><span>وضعیت</span><strong><bdi dir="ltr">{config.pageStatus || 'unknown'}</bdi></strong></div>
+        <div><span>اجرا</span><strong>{canInsert ? 'فعال' : 'غیرفعال'}</strong></div>
+      </section>
+      <section className="aiea-simple-intro"><strong>حالت ساده فعال است</strong><p>گفت‌وگو، تحلیل، Plan، Job، اجرای خودکار و Rollback موقتاً غیرفعال‌اند. این پنل فقط یک عنوان را به شکل یک block آماده به Editor اضافه می‌کند.</p></section>
+      {config.pageStatus !== 'draft' && <section className="aiea-error" role="status"><strong>نیاز به Draft</strong><p>برای افزودن محتوا، وضعیت برگه را به Draft تغییر دهید و Editor را Refresh کنید.</p></section>}
+      {configurationMissing && <section className="aiea-error" role="alert"><strong>پیکربندی در دسترس نیست</strong><p>اطلاعات اولیهٔ افزونه بارگیری نشد. Editor را یک‌بار Refresh کنید.</p></section>}
+      <form className="aiea-chat" onSubmit={(event) => void handleSubmit(event)}>
+        <label htmlFor="aiea-heading-title">متن عنوان</label>
+        <textarea id="aiea-heading-title" value={title} onChange={(event) => setTitle(event.target.value)} rows={3} maxLength={180} disabled={busy} placeholder="مثال: خدمات ما" />
+        <div className="aiea-actions"><button type="submit" className="aiea-button" disabled={busy || !canInsert}>{busy ? 'در حال افزودن…' : 'درگ و افزودن عنوان'}</button></div>
+      </form>
       <section className="aiea-status-card" aria-live="polite"><strong>وضعیت</strong><p>{status}</p></section>
       {error && <section className="aiea-error" role="alert"><strong>نیاز به اقدام</strong><p>{error}</p></section>}
-      {answer && <section className="aiea-status-card"><strong>پاسخ عامل</strong><p>{answer}</p></section>}
-      {plan && <section className="aiea-plan" aria-label="برنامهٔ پیشنهادی"><div className="aiea-section-heading"><h3>Plan پیشنهادی</h3><span>{executionMode === 'step' ? 'گام‌به‌گام' : 'خودکار کنترل‌شده'}</span></div><p className="aiea-plan__goal">{plan.goal}</p><details open><summary>فرض‌ها و معیارهای پذیرش</summary><ul>{[...plan.assumptions, ...plan.acceptanceCriteria].map((item) => <li key={item}>{item}</li>)}</ul></details><ol className="aiea-tasks">{actions.map((action, index) => <li key={action.id}><span className="aiea-task-index">{index + 1}</span><div><strong>{action.tool}</strong><p>{action.description}</p><small>{taskState(action)}</small></div><span className={`aiea-risk aiea-risk--${action.risk_level}`}>{action.risk_level === 'low' ? 'کم‌ریسک' : action.risk_level === 'medium' ? 'میانه' : 'بالا'}</span></li>)}</ol><div className="aiea-actions">{!jobStatus && <button type="button" className="aiea-button" onClick={() => void approve()} disabled={busy || !config.canExecute}>تأیید و ساخت Job</button>}{jobStatus && <button type="button" className="aiea-button" onClick={() => runNext()} disabled={busy || !config.canExecute || jobStatus.job.state === 'completed'}>اجرای گام بعدی</button>}{lastSnapshot && <button type="button" className="aiea-button aiea-button--secondary" onClick={rollback} disabled={busy}>Rollback آخرین گام</button>}<button type="button" className="aiea-button aiea-button--secondary" onClick={() => { setPlan(null); setPlanId(null) }} disabled={busy}>رد Plan</button></div></section>}
-      {session && <p className="aiea-session">Session: <bdi className="aiea-ltr">{session.id}</bdi></p>}
     </div>}
   </aside>
 }

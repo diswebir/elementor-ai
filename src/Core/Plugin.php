@@ -233,7 +233,10 @@ final class Plugin
         $this->container->singleton(PluginPermissions::class, static fn (): PluginPermissions => new PluginPermissions());
         $this->container->singleton(
             Permission::class,
-            fn (): Permission => new Permission($this->container->get(PluginPermissions::class)),
+            fn (): Permission => new Permission(
+                $this->container->get(PluginPermissions::class),
+                $this->container->get(Settings::class),
+            ),
         );
         $this->container->singleton(
             ContextController::class,
