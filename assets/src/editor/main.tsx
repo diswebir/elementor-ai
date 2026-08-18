@@ -19,7 +19,7 @@ const modeLabels: Record<AgentMode, string> = { ask: 'پرسش', plan: 'برنا
 const stateLabels: Record<JobState, string> = { idle: 'آماده', analyzing: 'در حال تحلیل', planning: 'در حال برنامه‌ریزی', waiting_approval: 'منتظر تأیید', executing: 'در حال اجرا', validating: 'در حال اعتبارسنجی', repairing: 'در حال ترمیم', completed: 'کامل شد', failed: 'ناموفق', cancelled: 'لغو شد', needs_review: 'نیازمند بازبینی' }
 
 function App() {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
   const [mode, setMode] = useState<AgentMode>('plan')
   const [executionMode, setExecutionMode] = useState<ExecutionMode>('step')
   const [scope, setScope] = useState(config?.defaultScope ?? 'current')
@@ -130,7 +130,10 @@ function App() {
 
   const taskState = (action: PlanAction): string => jobStatus?.tasks.find((task) => task.action_id === action.id)?.state ?? action.state ?? 'pending'
   return <aside className={`aiea-panel ${isOpen ? 'aiea-panel--open' : 'aiea-panel--closed'}`} dir="rtl" aria-label="عامل هوش مصنوعی المنتور">
-    <button className="aiea-panel__toggle" onClick={() => setIsOpen((value) => !value)} aria-expanded={isOpen} aria-controls="aiea-panel-content">{isOpen ? 'بستن عامل' : 'باز کردن عامل'}</button>
+    <button className="aiea-panel__launcher" onClick={() => setIsOpen((value) => !value)} aria-expanded={isOpen} aria-controls="aiea-panel-content">
+      <span className="aiea-panel__launcher-badge" aria-hidden="true">AI</span>
+      <span>{isOpen ? 'بستن پنل هوش مصنوعی' : 'ویرایش با هوش مصنوعی'}</span>
+    </button>
     {isOpen && <div id="aiea-panel-content" className="aiea-panel__content">
       <header className="aiea-panel__header"><div><p className="aiea-eyebrow">ELEMENTOR AI AGENT</p><h2>عامل ساخت صفحه</h2></div><span className={`aiea-state aiea-state--${state}`} role="status">{stateLabels[state]}</span></header>
       <section className="aiea-context" aria-label="وضعیت محیط"><div><span>صفحه</span><strong>{config.postId ? `#${config.postId}` : 'نامشخص'}</strong></div><div><span>Provider</span><strong>{config.providerConfigured ? 'آماده' : 'نیازمند تنظیم'}</strong></div><div><span>Draft</span><strong>{config.canExecute ? 'قابل اجرا' : 'فقط خواندنی'}</strong></div></section>

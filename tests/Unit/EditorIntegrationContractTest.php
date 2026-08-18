@@ -30,5 +30,7 @@ final class EditorIntegrationContractTest extends TestCase
 
         self::assertStringContainsString("rootNode.dataset.aieaEditorRoot = 'fallback'", $bundle);
         self::assertStringContainsString('document.body.append(rootNode)', $bundle);
+        self::assertStringContainsString('ویرایش با هوش مصنوعی', $bundle);
+        self::assertStringContainsString('useState(false)', $bundle);
     }
 }
