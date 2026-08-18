@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="AI Elementor Agent">
+<ruleset name="AI Elementor AG">
     <description>Modern PHP style baseline for the plugin; WordPress security checks are enforced by focused tests and review.</description>
     <file>src</file>
     <file>tests</file>

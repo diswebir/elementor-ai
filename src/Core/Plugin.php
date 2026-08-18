@@ -100,7 +100,7 @@ final class Plugin
 
         $issues = $this->container->get(CompatibilityGuard::class)->issues();
         echo '<div class="notice notice-warning"><p><strong>'
-            . esc_html__('AI Elementor Agent:', 'ai-elementor-agent')
+            . esc_html__('AI Elementor AG:', 'ai-elementor-ag')
             . '</strong> '
             . esc_html(implode(' ', $issues))
             . '</p></div>';

@@ -22,14 +22,14 @@ final class SessionController
         try {
             $scope = sanitize_key((string) $request->get_param('scope')) ?: 'current';
             if (!in_array($scope, ['current', 'site', 'project'], true)) {
-                return $this->response->error('aiea_invalid_scope', __('Invalid context scope.', 'ai-elementor-agent'));
+                return $this->response->error('aiea_invalid_scope', __('Invalid context scope.', 'ai-elementor-ag'));
             }
             $postId = absint($request->get_param('post_id'));
             $context = $this->context->collect($postId, $scope, sanitize_text_field((string) $request->get_param('selection_id')) ?: null);
             $session = $this->conversations->create(get_current_user_id(), $postId, $scope, $context['hash'], sanitize_text_field((string) $request->get_param('model')));
             return $this->response->success(['session' => $session, 'context_summary' => $context['data']]);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_session_creation_failed', __('A secure session could not be created for this page.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_session_creation_failed', __('A secure session could not be created for this page.', 'ai-elementor-ag'), 409);
         }
     }
 }

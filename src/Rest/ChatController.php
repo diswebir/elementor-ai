@@ -25,7 +25,7 @@ final class ChatController
             );
             return $this->response->success(['message' => $content]);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_chat_failed', __('The assistant could not answer safely.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_chat_failed', __('The assistant could not answer safely.', 'ai-elementor-ag'), 409);
         }
     }
 }

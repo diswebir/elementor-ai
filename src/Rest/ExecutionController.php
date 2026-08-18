@@ -23,7 +23,7 @@ final class ExecutionController
     {
         $job = $this->jobs->findOwned(sanitize_text_field((string) $request->get_param('job_id')), get_current_user_id());
         if ($job === null || absint($job['page_id']) !== absint($request->get_param('post_id'))) {
-            return $this->response->error('aiea_job_not_found', __('Job was not found.', 'ai-elementor-agent'), 404);
+            return $this->response->error('aiea_job_not_found', __('Job was not found.', 'ai-elementor-ag'), 404);
         }
         return $this->response->success(['job' => $job, 'tasks' => $this->jobs->tasks((string) $job['id'])]);
     }
@@ -34,7 +34,7 @@ final class ExecutionController
             $result = $this->runner->runNext(sanitize_text_field((string) $request->get_param('job_id')), get_current_user_id());
             return $this->response->success($result);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_execution_stopped', __('Action stopped safely and needs review.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_execution_stopped', __('Action stopped safely and needs review.', 'ai-elementor-ag'), 409);
         }
     }
 
@@ -44,7 +44,7 @@ final class ExecutionController
             $result = $this->transactions->rollback(absint($request->get_param('post_id')), sanitize_text_field((string) $request->get_param('snapshot_id')));
             return $this->response->success($result);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_rollback_failed', __('The snapshot could not be restored safely.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_rollback_failed', __('The snapshot could not be restored safely.', 'ai-elementor-ag'), 409);
         }
     }
 }

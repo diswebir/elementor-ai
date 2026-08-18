@@ -75,7 +75,7 @@ final class ProviderController
             return $this->response->success([
                 'healthy' => false,
                 'latency_ms' => $latency,
-                'message' => __('آزمون اتصال با خطای غیرمنتظره متوقف شد. لاگ را بررسی کنید.', 'ai-elementor-agent'),
+                'message' => __('آزمون اتصال با خطای غیرمنتظره متوقف شد. لاگ را بررسی کنید.', 'ai-elementor-ag'),
                 'assistant_message' => null,
                 'usage' => [],
                 'request_id' => null,

@@ -1,6 +1,6 @@
-# AI Elementor Agent
+# AI Elementor AG
 
-افزونهٔ **AI Elementor Agent** یک عامل هوش مصنوعی کنترل‌شده برای ساخت یا اصلاح صفحات **Draft** در Elementor است. افزونه یک endpoint سازگار با OpenAI را در سمت سرور پیکربندی می‌کند، محیط Elementor را به‌صورت محدود و redacted می‌خواند، از مدل یک **Plan ساخت‌یافته** می‌گیرد و تنها پس از تأیید کاربر، تغییرات کوچک، قابل‌ثبت و قابل‌بازگشت را اجرا می‌کند.
+افزونهٔ **AI Elementor AG** یک عامل هوش مصنوعی کنترل‌شده برای ساخت یا اصلاح صفحات **Draft** در Elementor است. افزونه یک endpoint سازگار با OpenAI را در سمت سرور پیکربندی می‌کند، محیط Elementor را به‌صورت محدود و redacted می‌خواند، از مدل یک **Plan ساخت‌یافته** می‌گیرد و تنها پس از تأیید کاربر، تغییرات کوچک، قابل‌ثبت و قابل‌بازگشت را اجرا می‌کند.
 
 > این افزونه هیچ‌گاه به مدل اجازهٔ دست‌کاری مستقیم دیتابیس، JSON خام Elementor، PHP، SQL، JavaScript، shell، shortcode یا widgetهای خارج از allowlist را نمی‌دهد.
 
@@ -30,27 +30,27 @@
 
 ## نصب از پنل WordPress
 
-1. از خروجی release، فایل `ai-elementor-agent.zip` را دریافت کنید.
+1. از خروجی release، فایل `ai-elementor-ag.zip` را دریافت کنید.
 2. در WordPress به **افزونه‌ها ← افزودن ← بارگذاری افزونه** بروید.
 3. فایل ZIP را انتخاب، نصب و فعال کنید.
 4. مطمئن شوید Elementor نصب و فعال است.
-5. به **AI Elementor Agent** در منوی مدیریت بروید و provider را پیکربندی کنید.
+5. به **AI Elementor AG** در منوی مدیریت بروید و provider را پیکربندی کنید.
 
 ### نصب با SSH یا Composer برای توسعه‌دهندگان
 
 ```bash
-git clone https://github.com/diswebir/elementor-ai.git ai-elementor-agent
-cd ai-elementor-agent
+git clone https://github.com/diswebir/elementor-ai.git ai-elementor-ag
+cd ai-elementor-ag
 composer install
 pnpm install
 pnpm run build
 ```
 
-سپس پوشه را در `wp-content/plugins/ai-elementor-agent/` قرار دهید و افزونه را فعال کنید. برای محیط production، پوشه‌های `node_modules` و فایل‌های آزمون ضروری نیستند؛ فقط assetهای build شده در `assets/build/` باید باقی بمانند.
+سپس پوشه را در `wp-content/plugins/ai-elementor-ag/` قرار دهید و افزونه را فعال کنید. برای محیط production، پوشه‌های `node_modules` و فایل‌های آزمون ضروری نیستند؛ فقط assetهای build شده در `assets/build/` باید باقی بمانند.
 
 ## پیکربندی Provider
 
-از صفحهٔ **AI Elementor Agent** این مقادیر را وارد کنید.
+از صفحهٔ **AI Elementor AG** این مقادیر را وارد کنید.
 
 | گزینه | توضیح |
 |---|---|

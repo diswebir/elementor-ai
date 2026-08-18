@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name: AI Elementor Agent
+ * Plugin Name: AI Elementor AG
  * Description: A secure, approval-driven AI agent for planning and building Elementor draft pages.
- * Version: 0.1.4
+ * Version: 0.1.5
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author: diswebir
- * Text Domain: ai-elementor-agent
+ * Text Domain: ai-elementor-ag
  * Domain Path: /languages
  */
 
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AIEA_VERSION', '0.1.4');
+define('AIEA_VERSION', '0.1.5');
 define('AIEA_FILE', __FILE__);
 define('AIEA_DIR', plugin_dir_path(__FILE__));
 define('AIEA_URL', plugin_dir_url(__FILE__));
@@ -30,7 +30,7 @@ if (!is_readable($autoload)) {
         }
 
         echo '<div class="notice notice-error"><p>'
-            . esc_html__('AI Elementor Agent needs its Composer dependencies. Run composer install before activating it.', 'ai-elementor-agent')
+            . esc_html__('AI Elementor AG needs its Composer dependencies. Run composer install before activating it.', 'ai-elementor-ag')
             . '</p></div>';
     });
 

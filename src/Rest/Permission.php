@@ -22,7 +22,7 @@ final class Permission
         }
         $postId = absint($request->get_param('post_id'));
         if ($postId === 0 || !$this->permissions->canUseForPost($postId)) {
-            return new WP_Error('aiea_forbidden', __('You cannot access AI context for this page.', 'ai-elementor-agent'), ['status' => 403]);
+            return new WP_Error('aiea_forbidden', __('You cannot access AI context for this page.', 'ai-elementor-ag'), ['status' => 403]);
         }
         return true;
     }
@@ -36,7 +36,7 @@ final class Permission
         $postId = absint($request->get_param('post_id'));
         $post = $postId > 0 ? get_post($postId) : null;
         if ($post === null || $post->post_status !== 'draft' || !$this->permissions->canExecuteForPost($postId)) {
-            return new WP_Error('aiea_execute_forbidden', __('AI actions are only allowed on a draft page that you can edit.', 'ai-elementor-agent'), ['status' => 403]);
+            return new WP_Error('aiea_execute_forbidden', __('AI actions are only allowed on a draft page that you can edit.', 'ai-elementor-ag'), ['status' => 403]);
         }
         return true;
     }
@@ -48,7 +48,7 @@ final class Permission
             return $nonce;
         }
         if (!$this->permissions->canManage()) {
-            return new WP_Error('aiea_forbidden', __('You cannot manage AI provider settings.', 'ai-elementor-agent'), ['status' => 403]);
+            return new WP_Error('aiea_forbidden', __('You cannot manage AI provider settings.', 'ai-elementor-ag'), ['status' => 403]);
         }
         return true;
     }
@@ -57,7 +57,7 @@ final class Permission
     {
         $nonce = (string) $request->get_header('X-WP-Nonce');
         if ($nonce === '' || !wp_verify_nonce($nonce, 'wp_rest')) {
-            return new WP_Error('aiea_invalid_nonce', __('The AI editor request expired. Refresh the editor and try again.', 'ai-elementor-agent'), ['status' => 403]);
+            return new WP_Error('aiea_invalid_nonce', __('The AI editor request expired. Refresh the editor and try again.', 'ai-elementor-ag'), ['status' => 403]);
         }
         return true;
     }

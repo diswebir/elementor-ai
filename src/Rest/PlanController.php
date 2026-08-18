@@ -25,7 +25,7 @@ final class PlanController
             );
             return $this->response->success($result, 201);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_plan_failed', __('The plan could not be created or validated safely.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_plan_failed', __('The plan could not be created or validated safely.', 'ai-elementor-ag'), 409);
         }
     }
 
@@ -47,7 +47,7 @@ final class PlanController
             );
             return $this->response->success($result, 201);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_approval_failed', __('The plan approval is no longer valid.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_approval_failed', __('The plan approval is no longer valid.', 'ai-elementor-ag'), 409);
         }
     }
 }

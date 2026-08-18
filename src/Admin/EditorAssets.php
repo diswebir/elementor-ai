@@ -30,7 +30,7 @@ final class EditorAssets
 
     public function enqueueAdminAssets(string $hook): void
     {
-        if ($hook !== 'toplevel_page_ai-elementor-agent') {
+        if ($hook !== 'toplevel_page_ai-elementor-ag') {
             return;
         }
 

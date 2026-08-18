@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 if (!defined('AIEA_DIR')) {
     define('AIEA_DIR', dirname(__DIR__) . '/');
-    define('AIEA_URL', 'https://example.test/wp-content/plugins/ai-elementor-agent/');
+    define('AIEA_URL', 'https://example.test/wp-content/plugins/ai-elementor-ag/');
     define('AIEA_VERSION', '0.1.0-test');
 }
 

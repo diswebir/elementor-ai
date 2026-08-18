@@ -10,7 +10,7 @@ use AIEA\Support\Temperature;
 
 final class AdminPage
 {
-    private const PAGE_SLUG = 'ai-elementor-agent';
+    private const PAGE_SLUG = 'ai-elementor-ag';
 
     public function __construct(
         private readonly ?CompatibilityGuard $guard = null,
@@ -33,8 +33,8 @@ final class AdminPage
     public function registerPage(): void
     {
         add_menu_page(
-            __('AI Elementor Agent', 'ai-elementor-agent'),
-            __('AI Elementor Agent', 'ai-elementor-agent'),
+            __('AI Elementor AG', 'ai-elementor-ag'),
+            __('AI Elementor AG', 'ai-elementor-ag'),
             Capabilities::MANAGE,
             self::PAGE_SLUG,
             [$this, 'render'],
@@ -57,9 +57,9 @@ final class AdminPage
 
         add_settings_section(
             'aiea_provider_section',
-            __('Provider and execution policy', 'ai-elementor-agent'),
+            __('Provider and execution policy', 'ai-elementor-ag'),
             static function (): void {
-                echo '<p>' . esc_html__('API keys are stored separately and never returned to the browser.', 'ai-elementor-agent') . '</p>';
+                echo '<p>' . esc_html__('API keys are stored separately and never returned to the browser.', 'ai-elementor-ag') . '</p>';
             },
             self::PAGE_SLUG,
         );
@@ -87,13 +87,13 @@ final class AdminPage
         $providerType = isset($input['provider_type']) ? sanitize_key((string) $input['provider_type']) : $current['provider_type'];
         $allowedProviders = ['openai_compatible', 'openai', 'anthropic', 'gemini'];
         if (!in_array($providerType, $allowedProviders, true)) {
-            add_settings_error(Settings::OPTION, 'invalid_provider', __('Provider type is not supported.', 'ai-elementor-agent'));
+            add_settings_error(Settings::OPTION, 'invalid_provider', __('Provider type is not supported.', 'ai-elementor-ag'));
             $providerType = $current['provider_type'];
         }
 
         $baseUrl = isset($input['base_url']) ? esc_url_raw(trim((string) $input['base_url'])) : '';
         if ($baseUrl !== '' && wp_parse_url($baseUrl, PHP_URL_SCHEME) !== 'https') {
-            add_settings_error(Settings::OPTION, 'invalid_endpoint', __('Only HTTPS provider endpoints are accepted.', 'ai-elementor-agent'));
+            add_settings_error(Settings::OPTION, 'invalid_endpoint', __('Only HTTPS provider endpoints are accepted.', 'ai-elementor-ag'));
             $baseUrl = (string) $current['base_url'];
         }
 
@@ -145,8 +145,8 @@ final class AdminPage
 
         if ($field === 'api_key') {
             $masked = (new SecretManager())->masked();
-            echo '<input class="regular-text" autocomplete="new-password" type="password" name="' . esc_attr($name) . '" value="" placeholder="' . esc_attr($masked ?? __('Not configured', 'ai-elementor-agent')) . '">';
-            echo '<label><input type="checkbox" name="' . esc_attr(Settings::OPTION . '[clear_api_key]') . '" value="1"> ' . esc_html__('Delete the currently stored key', 'ai-elementor-agent') . '</label>';
+            echo '<input class="regular-text" autocomplete="new-password" type="password" name="' . esc_attr($name) . '" value="" placeholder="' . esc_attr($masked ?? __('Not configured', 'ai-elementor-ag')) . '">';
+            echo '<label><input type="checkbox" name="' . esc_attr(Settings::OPTION . '[clear_api_key]') . '" value="1"> ' . esc_html__('Delete the currently stored key', 'ai-elementor-ag') . '</label>';
             return;
         }
 
@@ -164,7 +164,7 @@ final class AdminPage
     public function render(): void
     {
         if (!current_user_can(Capabilities::MANAGE)) {
-            wp_die(esc_html__('You are not allowed to manage this plugin.', 'ai-elementor-agent'));
+            wp_die(esc_html__('You are not allowed to manage this plugin.', 'ai-elementor-ag'));
         }
 
         $issues = $this->guard?->issues() ?? [];
@@ -173,11 +173,11 @@ final class AdminPage
             'nonce' => wp_create_nonce('wp_rest'),
             'providerConfigured' => (new SecretManager())->hasSecret(),
         ]) ?: '{}';
-        echo '<div class="wrap" dir="rtl"><h1>' . esc_html__('AI Elementor Agent', 'ai-elementor-agent') . '</h1>';
+        echo '<div class="wrap" dir="rtl"><h1>' . esc_html__('AI Elementor AG', 'ai-elementor-ag') . '</h1>';
         if ($issues !== []) {
             echo '<div class="notice notice-warning inline"><p>' . esc_html(implode(' ', $issues)) . '</p></div>';
         }
-        echo '<p>' . esc_html__('تنظیمات اتصال و سیاست‌های عامل در این صفحه مدیریت می‌شود. کلید API در هیچ پاسخ یا گزارش مرورگر نمایش داده نمی‌شود.', 'ai-elementor-agent') . '</p>';
+        echo '<p>' . esc_html__('تنظیمات اتصال و سیاست‌های عامل در این صفحه مدیریت می‌شود. کلید API در هیچ پاسخ یا گزارش مرورگر نمایش داده نمی‌شود.', 'ai-elementor-ag') . '</p>';
         echo '<form action="options.php" method="post">';
         settings_fields('aiea_settings_group');
         do_settings_sections(self::PAGE_SLUG);
@@ -189,19 +189,19 @@ final class AdminPage
     private function fieldDefinitions(): array
     {
         return [
-            'provider_type' => ['label' => __('Provider', 'ai-elementor-agent'), 'type' => 'select', 'options' => ['openai_compatible' => 'OpenAI-compatible', 'openai' => 'OpenAI', 'anthropic' => 'Anthropic', 'gemini' => 'Google Gemini']],
-            'provider_alias' => ['label' => __('Provider alias', 'ai-elementor-agent'), 'type' => 'text', 'help' => __('A safe, human-readable name; do not include credentials.', 'ai-elementor-agent')],
-            'api_key' => ['label' => __('API key', 'ai-elementor-agent'), 'type' => 'password', 'help' => __('Leave blank to retain the existing key. It is encrypted before storage and never shown again.', 'ai-elementor-agent')],
-            'base_url' => ['label' => __('Base URL', 'ai-elementor-agent'), 'type' => 'url', 'help' => __('HTTPS only. Private and loopback addresses are rejected by the request guard.', 'ai-elementor-agent')],
-            'model' => ['label' => __('Default model', 'ai-elementor-agent'), 'type' => 'text', 'help' => __('The model must support structured output for Build mode.', 'ai-elementor-agent')],
-            'temperature' => ['label' => __('Temperature', 'ai-elementor-agent'), 'type' => 'number', 'min' => '0', 'max' => '2', 'step' => '0.01', 'inputmode' => 'decimal', 'help' => __('A value from 0 to 2; decimals such as 0.2 or 0.75 are supported.', 'ai-elementor-agent')],
-            'max_tokens' => ['label' => __('Maximum tokens', 'ai-elementor-agent'), 'type' => 'number', 'min' => '256', 'max' => '16000'],
-            'request_timeout' => ['label' => __('Request timeout', 'ai-elementor-agent'), 'type' => 'number', 'min' => '5', 'max' => '120'],
-            'monthly_action_limit' => ['label' => __('Monthly action limit', 'ai-elementor-agent'), 'type' => 'number', 'min' => '1', 'max' => '100000'],
-            'context_scope' => ['label' => __('Default context scope', 'ai-elementor-agent'), 'type' => 'select', 'options' => ['current' => __('Current page only', 'ai-elementor-agent'), 'site' => __('Selected site design data', 'ai-elementor-agent'), 'project' => __('Project instructions', 'ai-elementor-agent')]],
-            'retention_days' => ['label' => __('Retention days', 'ai-elementor-agent'), 'type' => 'number', 'min' => '1', 'max' => '365'],
-            'development_mode' => ['label' => __('Development diagnostics', 'ai-elementor-agent'), 'type' => 'checkbox', 'help' => __('Store diagnostic metadata without secrets or raw prompts.', 'ai-elementor-agent')],
-            'allow_auto_mode' => ['label' => __('Allow Auto mode', 'ai-elementor-agent'), 'type' => 'checkbox', 'help' => __('Auto mode remains Draft-only and excludes high-risk actions.', 'ai-elementor-agent')],
+            'provider_type' => ['label' => __('Provider', 'ai-elementor-ag'), 'type' => 'select', 'options' => ['openai_compatible' => 'OpenAI-compatible', 'openai' => 'OpenAI', 'anthropic' => 'Anthropic', 'gemini' => 'Google Gemini']],
+            'provider_alias' => ['label' => __('Provider alias', 'ai-elementor-ag'), 'type' => 'text', 'help' => __('A safe, human-readable name; do not include credentials.', 'ai-elementor-ag')],
+            'api_key' => ['label' => __('API key', 'ai-elementor-ag'), 'type' => 'password', 'help' => __('Leave blank to retain the existing key. It is encrypted before storage and never shown again.', 'ai-elementor-ag')],
+            'base_url' => ['label' => __('Base URL', 'ai-elementor-ag'), 'type' => 'url', 'help' => __('HTTPS only. Private and loopback addresses are rejected by the request guard.', 'ai-elementor-ag')],
+            'model' => ['label' => __('Default model', 'ai-elementor-ag'), 'type' => 'text', 'help' => __('The model must support structured output for Build mode.', 'ai-elementor-ag')],
+            'temperature' => ['label' => __('Temperature', 'ai-elementor-ag'), 'type' => 'number', 'min' => '0', 'max' => '2', 'step' => '0.01', 'inputmode' => 'decimal', 'help' => __('A value from 0 to 2; decimals such as 0.2 or 0.75 are supported.', 'ai-elementor-ag')],
+            'max_tokens' => ['label' => __('Maximum tokens', 'ai-elementor-ag'), 'type' => 'number', 'min' => '256', 'max' => '16000'],
+            'request_timeout' => ['label' => __('Request timeout', 'ai-elementor-ag'), 'type' => 'number', 'min' => '5', 'max' => '120'],
+            'monthly_action_limit' => ['label' => __('Monthly action limit', 'ai-elementor-ag'), 'type' => 'number', 'min' => '1', 'max' => '100000'],
+            'context_scope' => ['label' => __('Default context scope', 'ai-elementor-ag'), 'type' => 'select', 'options' => ['current' => __('Current page only', 'ai-elementor-ag'), 'site' => __('Selected site design data', 'ai-elementor-ag'), 'project' => __('Project instructions', 'ai-elementor-ag')]],
+            'retention_days' => ['label' => __('Retention days', 'ai-elementor-ag'), 'type' => 'number', 'min' => '1', 'max' => '365'],
+            'development_mode' => ['label' => __('Development diagnostics', 'ai-elementor-ag'), 'type' => 'checkbox', 'help' => __('Store diagnostic metadata without secrets or raw prompts.', 'ai-elementor-ag')],
+            'allow_auto_mode' => ['label' => __('Allow Auto mode', 'ai-elementor-ag'), 'type' => 'checkbox', 'help' => __('Auto mode remains Draft-only and excludes high-risk actions.', 'ai-elementor-ag')],
         ];
     }
 }

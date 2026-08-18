@@ -1,9 +1,9 @@
-# دستور ساخت نهایی: افزونهٔ Production-Ready «AI Elementor Agent»
+# دستور ساخت نهایی: افزونهٔ Production-Ready «AI Elementor AG»
 
 **نسخهٔ سند:** 1.0  
 **زبان محصول:** فارسی با پشتیبانی کامل RTL و قابلیت ترجمه  
-**نام افزونه:** AI Elementor Agent  
-**Slug و Text Domain:** `ai-elementor-agent`  
+**نام افزونه:** AI Elementor AG  
+**Slug و Text Domain:** `ai-elementor-ag`  
 **REST Namespace:** `ai-elementor/v1`
 
 > **این سند یک مشخصات ساخت الزام‌آور است، نه نمونهٔ نمایشی.** خروجی باید یک افزونهٔ واقعی، قابل‌نصب، قابل‌آزمون، امن و قابل‌استفاده در WordPress + Elementor باشد. از mock، دادهٔ ساختگی، handler نیمه‌کاره، TODO برای مسیرهای اصلی، یا ادعای انجام عملیاتی که واقعاً انجام نشده است استفاده نکن.
@@ -80,8 +80,8 @@ HTML کامل سایت، post meta خام، cookie، password، secret، token،
 از Dependency Injection استفاده کنید. فایل اصلی افزونه فقط header، autoload، compatibility gate و boot container را دارد. هیچ business logic، query دیتابیس، route handler یا call provider در فایل اصلی قرار نگیرد.
 
 ```text
-ai-elementor-agent/
-├── ai-elementor-agent.php
+ai-elementor-ag/
+├── ai-elementor-ag.php
 ├── uninstall.php
 ├── readme.txt
 ├── composer.json

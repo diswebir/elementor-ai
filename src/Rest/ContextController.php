@@ -18,12 +18,12 @@ final class ContextController
         try {
             $scope = sanitize_key((string) $request->get_param('scope')) ?: 'current';
             if (!in_array($scope, ['current', 'site', 'project'], true)) {
-                return $this->response->error('aiea_invalid_scope', __('Invalid context scope.', 'ai-elementor-agent'));
+                return $this->response->error('aiea_invalid_scope', __('Invalid context scope.', 'ai-elementor-ag'));
             }
             $snapshot = $this->context->collect(absint($request->get_param('post_id')), $scope, sanitize_text_field((string) $request->get_param('selection_id')) ?: null);
             return $this->response->success($snapshot);
         } catch (\Throwable $exception) {
-            return $this->response->error('aiea_context_unavailable', __('Page context could not be collected safely.', 'ai-elementor-agent'), 409);
+            return $this->response->error('aiea_context_unavailable', __('Page context could not be collected safely.', 'ai-elementor-ag'), 409);
         }
     }
 }
