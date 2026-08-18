@@ -27,6 +27,16 @@ final class ProviderTestIntegrationContractTest extends TestCase
         self::assertStringNotContainsString("'result_summary' => \$message", $controller);
     }
 
+    public function testAdminConfigurationHasADomFallback(): void
+    {
+        $adminPage = (string) file_get_contents(dirname(__DIR__, 2) . '/src/Admin/AdminPage.php');
+        $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/admin/main.tsx');
+
+        self::assertStringContainsString('data-aiea-admin-config=', $adminPage);
+        self::assertStringContainsString('dataset.aieaAdminConfig', $bundle);
+        self::assertStringContainsString('resolveConfig()', $bundle);
+    }
+
     public function testAdminBundleHasConnectionTestAndRecentLogsPanel(): void
     {
         $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/admin/main.tsx');

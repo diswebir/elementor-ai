@@ -21,7 +21,22 @@ type AuditEntry = {
   created_at: string
 }
 
-const config: AIEAAdminConfig | undefined = window.AIEA_ADMIN_CONFIG
+const rootNode = document.getElementById('aiea-admin-app')
+
+function resolveConfig(): AIEAAdminConfig | undefined {
+  if (window.AIEA_ADMIN_CONFIG) return window.AIEA_ADMIN_CONFIG
+  const serialized = rootNode?.dataset.aieaAdminConfig
+  if (!serialized) return undefined
+  try {
+    const parsed = JSON.parse(serialized) as Partial<AIEAAdminConfig>
+    if (typeof parsed.restUrl !== 'string' || typeof parsed.nonce !== 'string' || typeof parsed.providerConfigured !== 'boolean') return undefined
+    return { restUrl: parsed.restUrl, nonce: parsed.nonce, providerConfigured: parsed.providerConfigured }
+  } catch {
+    return undefined
+  }
+}
+
+const config = resolveConfig()
 
 async function apiRequest<T>(path: string, method: 'GET' | 'POST', body?: Record<string, string>): Promise<{ data: T, status: number }> {
   if (!config) throw new Error('دادهٔ اولیهٔ صفحهٔ تنظیمات بارگیری نشده است.')
@@ -103,5 +118,4 @@ function ProviderTestPanel() {
   </section>
 }
 
-const rootNode = document.getElementById('aiea-admin-app')
 if (rootNode) createRoot(rootNode).render(<ProviderTestPanel />)

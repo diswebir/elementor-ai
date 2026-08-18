@@ -168,6 +168,11 @@ final class AdminPage
         }
 
         $issues = $this->guard?->issues() ?? [];
+        $adminConfig = wp_json_encode([
+            'restUrl' => esc_url_raw(rest_url('ai-elementor/v1/')),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'providerConfigured' => (new SecretManager())->hasSecret(),
+        ]) ?: '{}';
         echo '<div class="wrap" dir="rtl"><h1>' . esc_html__('AI Elementor Agent', 'ai-elementor-agent') . '</h1>';
         if ($issues !== []) {
             echo '<div class="notice notice-warning inline"><p>' . esc_html(implode(' ', $issues)) . '</p></div>';
@@ -177,7 +182,7 @@ final class AdminPage
         settings_fields('aiea_settings_group');
         do_settings_sections(self::PAGE_SLUG);
         submit_button();
-        echo '</form><div id="aiea-admin-app" data-aiea-admin-app="1"></div></div>';
+        echo '</form><div id="aiea-admin-app" data-aiea-admin-app="1" data-aiea-admin-config="' . esc_attr($adminConfig) . '"></div></div>';
     }
 
     /** @return array<string, array<string, mixed>> */
