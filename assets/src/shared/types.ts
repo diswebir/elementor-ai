@@ -14,6 +14,8 @@ export interface AIEAConfig {
   postId: number
   canUse: boolean
   canExecute: boolean
+  pageStatus: string
+  allowAutoMode: boolean
   providerConfigured: boolean
   defaultScope: 'current' | 'site' | 'project'
 }

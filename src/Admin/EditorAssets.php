@@ -77,7 +77,7 @@ final class EditorAssets
         }
     }
 
-    /** @return array{restUrl: string, nonce: string, postId: int, canUse: bool, canExecute: bool, providerConfigured: bool, defaultScope: string} */
+    /** @return array{restUrl: string, nonce: string, postId: int, canUse: bool, canExecute: bool, pageStatus: string, allowAutoMode: bool, providerConfigured: bool, defaultScope: string} */
     private function editorConfig(): array
     {
         $postId = isset($_GET['post']) ? absint($_GET['post']) : 0;
@@ -88,7 +88,9 @@ final class EditorAssets
             'nonce' => wp_create_nonce('wp_rest'),
             'postId' => $postId,
             'canUse' => $postId > 0 && current_user_can(Capabilities::USE) && current_user_can('edit_post', $postId),
-            'canExecute' => $postId > 0 && current_user_can(Capabilities::EXECUTE) && current_user_can('edit_post', $postId) && get_post_status($postId) === 'draft',
+            'canExecute' => $postId > 0 && current_user_can(Capabilities::EXECUTE) && current_user_can('edit_post', $postId),
+            'pageStatus' => $postId > 0 ? (string) get_post_status($postId) : '',
+            'allowAutoMode' => !empty($settings['allow_auto_mode']),
             'providerConfigured' => (new \AIEA\AI\SecretManager())->hasSecret(),
             'defaultScope' => $settings['context_scope'] ?? 'current',
         ];

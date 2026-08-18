@@ -35,6 +35,21 @@ final class EditorIntegrationContractTest extends TestCase
         self::assertStringContainsString('configurationMissing ? null : new AIEAApi(config)', $bundle);
     }
 
+    public function testEditorConfigurationExposesExecutionPolicyAndAutoMode(): void
+    {
+        $assets = (string) file_get_contents(dirname(__DIR__, 2) . '/src/Admin/EditorAssets.php');
+        $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/editor/main.tsx');
+
+        self::assertStringContainsString("'pageStatus' => \$postId > 0 ? (string) get_post_status(\$postId) : ''", $assets);
+        self::assertStringContainsString("'allowAutoMode' => !empty(\$settings['allow_auto_mode'])", $assets);
+        self::assertStringContainsString("typeof parsed.pageStatus !== 'string'", $bundle);
+        self::assertStringContainsString("typeof parsed.allowAutoMode !== 'boolean'", $bundle);
+        self::assertStringContainsString("mode !== 'ask'", $bundle);
+        self::assertStringContainsString('disabled={!config.allowAutoMode}', $bundle);
+        self::assertStringContainsString('isAutoEligible(generatedActions)', $bundle);
+        self::assertStringContainsString('await approve(generated.id, active, generatedActions, true)', $bundle);
+    }
+
     public function testEditorBundleHasAFallbackMountPoint(): void
     {
         $bundle = (string) file_get_contents(dirname(__DIR__, 2) . '/assets/src/editor/main.tsx');

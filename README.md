@@ -12,7 +12,7 @@
 | Provider | اتصال OpenAI-compatible از سمت سرور، کلید رمزگذاری‌شده، timeout، خطایابی امن و اعتبارسنجی endpoint |
 | Context | استخراج ساختار صفحه، انتخاب فعلی، رنگ‌ها و typographyهای global با redaction و budget محدود |
 | Plan | خروجی JSON schema، allowlist ابزار، dependency check، risk level و کنترل freshness context |
-| Execution | Job idempotent، task log، document hash، قفل کوتاه‌مدت، snapshot، validation و receipt برای هر گام |
+| Execution | Job idempotent، task log، document hash، قفل کوتاه‌مدت، snapshot، validation و receipt برای هر گام؛ اجرای خودکار محدود به Plan کم‌ریسک در Draft |
 | Elementor | ایجاد container و widgetهای Core، به‌روزرسانی settingهای allowlisted، جابه‌جایی، حذف و بازگردانی snapshot |
 | Audit | جدول‌های مستقل برای conversations، plans، jobs، tasks، snapshots، usage و audit log |
 | امنیت | capability اختصاصی، REST nonce، محدودیت Draft، بررسی مالکیت، endpoint guard، عدم نمایش secret و عدم اجرای مستقیم دستور مدل |
@@ -77,10 +77,11 @@ define('AIEA_ENCRYPTION_KEY', 'a-long-random-server-side-secret');
 4. حالت **برنامه‌ریزی** یا **ساخت** را انتخاب و درخواست فارسی خود را بنویسید.
 5. Plan، فرض‌ها، معیارهای پذیرش، ابزارها و سطح ریسک را بازبینی کنید.
 6. با «تأیید و ساخت Job» فقط actionهای نمایش‌داده‌شده وارد صف می‌شوند.
-7. در حالت گام‌به‌گام، هر بار «اجرای گام بعدی» را بزنید. در حالت خودکار کنترل‌شده، پس از همان تأیید، گام‌های Plan تأییدشده پشت‌سرهم اجرا می‌شوند.
-8. پس از هر mutation یک receipt و snapshot ایجاد می‌شود. در صورت نیاز «Rollback آخرین گام» را اجرا کنید.
+7. در حالت گام‌به‌گام، «تأیید و ساخت Job» را بزنید و سپس هر بار «اجرای گام بعدی» را انتخاب کنید.
+8. برای اجرای خودکار کنترل‌شده، مدیر باید ابتدا گزینهٔ **Allow Auto mode** را در تنظیمات افزونه فعال کند. سپس در حالت برنامه‌ریزی یا ساخت، اجرای «خودکار کنترل‌شده» را انتخاب کنید؛ Planهای تماماً کم‌ریسک و بدون نیاز به تأیید گام‌ها، پس از تولید Plan بدون تأیید جداگانه اجرا می‌شوند.
+9. پس از هر mutation یک receipt و snapshot ایجاد می‌شود. در صورت نیاز «Rollback آخرین گام» را اجرا کنید.
 
-> اجرای mutation در صفحهٔ Published، Private یا در حال ویرایش توسط کاربر فاقد مجوز مسدود است. Plan قدیمی نیز با تغییر context یا document hash اجرا نمی‌شود.
+> اجرای mutation و اجرای خودکار فقط روی Draft و برای کاربر دارای capability اجرا مجاز است. Plan پرریسک یا Plan نیازمند تأیید، همیشه به حالت گام‌به‌گام بازمی‌گردد. Plan قدیمی نیز با تغییر context یا document hash اجرا نمی‌شود.
 
 ## allowlist فعلی Elementor
 
